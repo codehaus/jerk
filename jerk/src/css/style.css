@@ -1,0 +1,41 @@
+
+ td.time { 
+		width:100px;
+	}
+
+ td.nick { 
+		width:100px;
+	}
+
+ td.text { 
+		width:600px;
+	}
+
+ .time {
+		font-family:georgia, verdana, arial, sans-serif;
+		font-size:12px;
+		border:1px dotted #999999;
+		color:#999999;
+		text-align:right;  							
+		padding:2px;
+	}
+
+ .nick {
+		font-family:georgia, verdana, arial, sans-serif;
+		font-size:12px;
+		border:1px dotted #999999;
+		color: #990000;
+		text-align:left;  							
+		margin-left:10px;
+		margin-right:10px;
+		padding:2px;
+	}
+
+ .text {
+		font-family:georgia, verdana, arial, sans-serif;
+		font-size:12px;
+		border:1px dotted #999999;
+		color:black;
+		text-align:left;  							
+		padding:2px;
+	}

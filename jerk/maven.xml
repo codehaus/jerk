@@ -1,0 +1,57 @@
+
+<project default="java:jar"
+         xmlns:j="jelly:core">
+
+  <goal name="jerk:install"
+        prereqs="java:jar">
+
+    <echo>
+    ----------------------------------------------------------------------
+    Install to ${jerk.home}
+    ----------------------------------------------------------------------
+    </echo>
+
+    <delete dir="${jerk.home}"/>
+
+    <mkdir dir="${jerk.home}"/>
+    <mkdir dir="${jerk.home}/lib"/>
+    <mkdir dir="${jerk.home}/bin"/>
+
+    <copy file="${basedir}/target/${maven.final.name}.jar"
+          todir="${jerk.home}/lib"/>
+
+    <copy todir="${jerk.home}/lib"
+          flatten="true">
+      <fileset dir="${maven.repo.local}">
+        <j:forEach var="dep" items="${pom.dependencies}">
+          <include name="${dep.id}/jars/${dep.jar}"/>  
+        </j:forEach>
+      </fileset>
+    </copy>
+
+    <copy todir="${jerk.home}/bin">
+      <fileset dir="${maven.src.dir}/bin"/>
+    </copy>
+    <chmod perm="+x">
+      <fileset dir="${jerk.home}/bin"/>
+    </chmod>
+    <copy todir="${jerk.home}/conf">
+      <fileset dir="${maven.src.dir}/conf"/>
+    </copy>
+
+    <echo>
+    ----------------------------------------------------------------------
+    Installed to ${jerk.home}
+    ----------------------------------------------------------------------
+    Please ensure that ${jerk.home}/bin is in your $PATH.
+
+    You may create the file ${user.home}/.jerkrc and 
+    add the following line:
+      
+      export BLISSED_HOME=${jerk.home}
+    ----------------------------------------------------------------------
+    </echo>
+
+  </goal>
+
+</project>
