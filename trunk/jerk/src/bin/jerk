@@ -135,5 +135,5 @@ else
         -Dclassworlds.conf="$CLASSWORLDS_CONF" \
         -Djerk.home="$JERK_HOME" \
         -Dtools.jar="$TOOLS_JAR" \
-        com.werken.classworlds.Launcher "$@"
+        org.codehaus.classworlds.Launcher "$@"
 fi
