@@ -61,12 +61,17 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** Binding of the log service to a channel.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
 public class LogChannelService implements ChannelService
 {
+    private static final Log log = LogFactory.getLog(LogChannelService.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -156,7 +161,7 @@ public class LogChannelService implements ChannelService
             }
             catch (IOException e)
             {
-                System.err.println( e.getLocalizedMessage() );
+                log.error("Failed to start log: " + eachName, e);
             }
         }
     }
@@ -178,7 +183,7 @@ public class LogChannelService implements ChannelService
             }
             catch (IOException e)
             {
-                System.err.println( e.getLocalizedMessage() );
+                log.error("Failed to stop logger: " + eachLogger, e);
             }
         }
     }
@@ -209,7 +214,7 @@ public class LogChannelService implements ChannelService
      */
     public void initialize() throws JerkException
     {
-        System.err.println( "initilaize for " + this.channel + " with " + this.props );
+        log.debug("Initializing for " + this.channel + " with " + this.props );
 
         this.channelLogDir = new File( this.logDir,
                                        this.channel.getName().substring( 1 ) );
@@ -232,13 +237,19 @@ public class LogChannelService implements ChannelService
         }
 
         startLogs();
+        
+        log.debug("Initialized");
     }
 
     /** Shutdown the channel service.
      */
     public void shutdown()
     {
+        log.debug("Shutting down...");
+        
         stopLogs();
+        
+        log.debug("Shutdown");
     }
 
     /** Accept a message in this service.
@@ -270,7 +281,7 @@ public class LogChannelService implements ChannelService
             }
             catch (IOException e)
             {
-                System.err.println( e.getLocalizedMessage() );
+                log.error("Logger failed to hanndle message", e);
             }
         }
     }

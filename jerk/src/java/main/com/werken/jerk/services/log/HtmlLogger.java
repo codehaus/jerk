@@ -55,37 +55,48 @@ import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+
 import java.util.Date;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+//
+// NOTE: Replace w/StringEscapeUtils once the commons-lang SNAPSHOT is updated
+//
+import org.apache.commons.lang.StringUtils;
+
+import com.werken.jerk.util.StringValueParser;
 
 /** Logger for HTML logs.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
-public class HtmlLogger implements Logger
+public class HtmlLogger extends AbstractLogger
 {
+    private static final Log log = LogFactory.getLog(HtmlLogger.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
-
-    /** The logfile. */
-    private File logFile;
-
-    /** The channel. */
-    private Channel channel;
     
     /** The log sink. */
-    private RandomAccessFile log;
-
+    private RandomAccessFile out;
+    
     /** Insertion point. */
     private long insertion;
-
+    
     /** Even/odd line for display. */
     private boolean isOdd;
-
+    
     /** Format to use for timestamps.  see java.text.SimpleDateFormat */
     private String tsFormat = "hh:mm:ssa";
+    
+    /** String value parser */
+    private StringValueParser valueParser = new StringValueParser();
     
     // ------------------------------------------------------------
     //     Constructors
@@ -108,30 +119,30 @@ public class HtmlLogger implements Logger
      */
     protected void openLog() throws IOException
     {
+        log.debug("Opening log file: " + logFile);
+        
         boolean isNew = true;
-
+        
         if ( this.logFile.exists() )
         {
             isNew = false;
             BufferedReader reader = new BufferedReader( new FileReader( this.logFile ) );
-
+            
             String line = null;
-
             while ( ( line = reader.readLine() ) != null )
             {
                 if ( line.indexOf( "jerk insertion point" ) >= 0 )
                 {
                     break;
                 }
-
+                
                 this.insertion += line.length() + 1;
             }
-
+            
             reader.close();
         }
-
-        this.log = new RandomAccessFile( this.logFile,
-                                         "rw" );
+        
+        this.out = new RandomAccessFile( this.logFile, "rw" );
         
         if ( isNew )
         {
@@ -139,14 +150,16 @@ public class HtmlLogger implements Logger
         }
         else
         {
-            this.log.seek( this.insertion );
-            String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
-                + "</td><td valign='top' colspan='2' class='event'>" 
-                + "log continues"
-                + "</td></tr>\n";
+            this.out.seek( this.insertion );
+            StringBuffer buff = new StringBuffer();
+            buff.append("<tr><td valign='top' class='time'>")
+                .append(formatTimestamp( new Date() ))
+                .append("</td><td valign='top' colspan='2' class='event'>")
+                .append("log continues")
+                .append("</td></tr>\n");
             
-            this.log.writeBytes( entry );
-            this.insertion += entry.length();
+            this.out.writeBytes( buff.toString() );
+            this.insertion += buff.length();
         }
         
         dumpEpilog();
@@ -158,56 +171,21 @@ public class HtmlLogger implements Logger
      */
     protected void closeLog() throws IOException
     {
-        this.log.seek( this.insertion );
-
-        String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
-            + "</td><td valign='top' colspan='2' class='event'>" 
-            + "log stops"
-            + "</td></tr>\n";
+        log.debug("Closing log file: " + logFile);
+        
+        out.seek( this.insertion );
+        
+        StringBuffer buff = new StringBuffer();
+        buff.append("<tr><td valign='top' class='time'>")
+            .append(formatTimestamp( new Date() ))
+            .append("</td><td valign='top' colspan='2' class='event'>" )
+            .append("log stops")
+            .append("</td></tr>\n");
             
-        this.log.writeBytes( entry );
-        this.log.close();
+        out.writeBytes( buff.toString() );
+        out.close();
     }
-
-    /** Substitute variables in a line of text.
-     *
-     *  @param line The text to evaluate.
-     *
-     *  @return The line with substitutions performed.
-     */
-    protected String substitutePrologVars(String line)
-    {
-        String newLine = line;
-
-        int varLoc = line.indexOf( "$CHANNEL$" );
-
-        if ( varLoc >= 0 )
-        {
-            newLine = line.substring( 0,
-                                      varLoc );
-
-            newLine += this.channel.getName();
-
-            newLine += line.substring( varLoc + 9 );
-        }
-
-        line = newLine;
-
-        varLoc = line.indexOf( "$DATE$" );
-
-        if ( varLoc >= 0 )
-        {
-            newLine = line.substring( 0,
-                                      varLoc );
-
-            newLine += DateFormat.getDateInstance().format( new Date() );
-
-            newLine += line.substring( varLoc + 6 );
-        }
-
-        return newLine;
-    }
-
+    
     /** Dump the prolog to the file.
      *
      *  @throws IOException If an IO error occurs.
@@ -215,28 +193,35 @@ public class HtmlLogger implements Logger
     protected void dumpProlog() throws IOException
     {
         InputStream in = getClass().getClassLoader().getResourceAsStream( "com/werken/jerk/services/log/prolog" );
-        
         BufferedReader reader = new BufferedReader( new InputStreamReader( in ) );
-
-        String line = null;
-
-        while ( ( line = reader.readLine() ) != null )
-        {
-            line = substitutePrologVars( line );
-            log.writeBytes( line + "\n" );
-
-            this.insertion += line.length() + 1;
+        
+        valueParser.setVariable("DATE", DateFormat.getDateInstance().format( new Date() ));
+        
+        try {
+            String line = null;
+            while ( ( line = reader.readLine() ) != null )
+            {
+                line = valueParser.parse(line);
+                
+                out.writeBytes( line + "\n" );
+                insertion += line.length() + 1;
+            }
         }
-
-        String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
-            + "</td><td valign='top' colspan='2' class='event'>" 
-            + "log begins"
-            + "</td></tr>\n";
-
-        this.log.writeBytes( entry );
-        this.insertion += entry.length();
+        finally {
+            reader.close();
+        }
+        
+        StringBuffer buff = new StringBuffer();
+        buff.append("<tr><td valign='top' class='time'>")
+            .append(formatTimestamp( new Date() ))
+            .append("</td><td valign='top' colspan='2' class='event'>")
+            .append("log begins")
+            .append("</td></tr>\n");
+        
+        out.writeBytes( buff.toString() );
+        insertion += buff.length();
     }
-
+    
     /** Dump the epilog to the file.
      *
      *  @throws IOException If an IO error occurs.
@@ -244,19 +229,20 @@ public class HtmlLogger implements Logger
     public void dumpEpilog() throws IOException
     {
         InputStream in = getClass().getClassLoader().getResourceAsStream( "com/werken/jerk/services/log/epilog" );
-        
         BufferedReader reader = new BufferedReader( new InputStreamReader( in ) );
         
-        String line = null;
-
-        while ( ( line = reader.readLine() ) != null )
-        {
-            line += "\n";
-
-            log.writeBytes( line );
+        try {
+            String line = null;
+            while ( ( line = reader.readLine() ) != null )
+            {
+                out.writeBytes( line + "\n" );
+            }
+        }
+        finally {
+            reader.close();
         }
     }
-
+    
     /** Escape HTML entities.
      *
      *  @param line The line to escape.
@@ -265,127 +251,24 @@ public class HtmlLogger implements Logger
      */
     public String sanitize(String line)
     {
-        int cur = 0;
-
-        int charLoc = 0;
-
-        String newLine = "";
-
-        while ( cur < line.length() )
-        {
-            charLoc = line.indexOf( "&",
-                                    cur );
-
-            if ( charLoc >= 0 )
-            {
-                newLine += line.substring( cur,
-                                           charLoc );
-
-                newLine += "&amp;";
-
-                cur = charLoc + 1;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-
-        newLine += line.substring( cur );
-        line = newLine;
-        newLine = "";
-        cur = 0;
-
-        while ( cur < line.length() )
-        {
-            charLoc = line.indexOf( "<",
-                                    cur );
-
-            if ( charLoc >= 0 )
-            {
-                newLine += line.substring( cur,
-                                           charLoc );
-
-                newLine += "&lt;";
-
-                cur = charLoc + 1;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        newLine += line.substring( cur );
-        line = newLine;
-        newLine = "";
-        cur = 0;
-
-        while ( cur < line.length() )
-        {
-            charLoc = line.indexOf( ">",
-                                    cur );
-
-            if ( charLoc >= 0 )
-            {
-                newLine += line.substring( cur,
-                                           charLoc );
-
-                newLine += "&gt;";
-
-                cur = charLoc + 1;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        newLine += line.substring( cur );
-        return newLine;
+        //
+        // NOTE: Replace w/StringEscapeUtils once the commons-lang SNAPSHOT is updated
+        //
+        line = StringUtils.replace(line, "&", "&amp;");
+        line = StringUtils.replace(line, "<", "&lt;");
+        line = StringUtils.replace(line, ">", "&gt;");
+        
+        return line;
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     //     com.werken.jerk.services.log.Logger
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-    /** Set the channel for this logger.
-     *
-     *  @param channel The channel.
-     */
     public void setChannel(Channel channel)
     {
-        this.channel = channel;
-    }
-
-    /** Set the log file.
-     *
-     *  <p>
-     *  If <code>null</code> is passed, that signals that
-     *  the current file should be closed.
-     *  </p>
-     *
-     *  @param logFile The log file.
-     *
-     *  @throws IOException If an IO error occurs.
-     */
-    public void setLog(File logFile) throws IOException
-    {
-        if ( logFile == null )
-        {
-            closeLog();
-            this.logFile = null;
-            return;
-        }
-
-        else if ( this.logFile == null
-                  ||
-                  ! this.logFile.equals( logFile ) )
-        {
-            this.logFile = logFile;
-            openLog();
-        }
+        super.setChannel(channel);
+        valueParser.setVariable("channel", channel);
     }
 
     /** Log a message.
@@ -400,7 +283,7 @@ public class HtmlLogger implements Logger
                            String nick,
                            String message) throws IOException
     {
-        this.log.seek( this.insertion );
+        this.out.seek( this.insertion );
 
         String evenOdd = "odd";
 
@@ -409,34 +292,32 @@ public class HtmlLogger implements Logger
             evenOdd = "even";
         }
         
-        try
-        {
-            String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
-                + "</td><td valign='top' class='nick'>" + nick
-                + "</td><td valign='top' class='text-" + evenOdd + "'>" + sanitize( message )
-                + "</td></tr>\n";
+        StringBuffer buff = new StringBuffer();
+        buff.append("<tr><td valign='top' class='time'>")
+            .append(formatTimestamp( new Date() ))
+            .append("</td><td valign='top' class='nick'>").append(nick)
+            .append("</td><td valign='top' class='text-").append(evenOdd).append("'>")
+            .append(sanitize( message ))
+            .append("</td></tr>\n");
 
-            this.log.writeBytes( entry );
-            
-            this.insertion += ( entry.length() );
-            
-            isOdd = ! isOdd;
-            
-            dumpEpilog();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-                      
-    }
-
-    private String formatTimestamp(Date timestamp)
-    {
-        SimpleDateFormat df = (SimpleDateFormat)DateFormat.getDateInstance(DateFormat.SHORT);
-        df.applyPattern(tsFormat);
-
-        return df.format(timestamp);
+        this.out.writeBytes( buff.toString() );
+        this.insertion += ( buff.length() );
+        
+        isOdd = ! isOdd;
+        
+        dumpEpilog();
     }
     
+    private SimpleDateFormat dateFormat;
+    
+    private String formatTimestamp(final Date timestamp)
+    {
+        if (dateFormat == null) {
+            SimpleDateFormat df = (SimpleDateFormat)DateFormat.getDateInstance(DateFormat.SHORT);
+            df.applyPattern(tsFormat);
+            dateFormat = df;
+        }
+        
+        return dateFormat.format(timestamp);
+    }
 }

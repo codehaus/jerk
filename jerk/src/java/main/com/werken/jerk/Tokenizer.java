@@ -46,6 +46,9 @@ package com.werken.jerk;
  
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** Simple tokenizer.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>

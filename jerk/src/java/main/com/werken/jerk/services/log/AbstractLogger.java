@@ -58,78 +58,57 @@ import java.text.DateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/** Logger for text logs.
- *
- *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
+/**
+ * An abstract logger.
  */
-public class TextLogger extends AbstractLogger
+public abstract class AbstractLogger
+    implements Logger
 {
-    private static final Log log = LogFactory.getLog(TextLogger.class);
+    /** The logfile. */
+    protected File logFile;
     
-    // ------------------------------------------------------------
-    //     Instance members
-    // ------------------------------------------------------------
-
-    /** The log sink. */
-    private PrintStream out;
-
-    // ------------------------------------------------------------
-    //     Constructors
-    // ------------------------------------------------------------
-
-    /** Construct.
+    /** The channel. */
+    protected Channel channel;
+    
+    /** Set the channel for this logger.
+     *
+     *  @param channel The channel.
      */
-    public TextLogger()
+    public void setChannel(final Channel channel)
     {
-        // intentionally left blank.
+        this.channel = channel;
     }
-
-    // ------------------------------------------------------------
-    //     Instance methods.
-    // ------------------------------------------------------------
-
-    /** Open the log.
+    
+    protected abstract void openLog() throws IOException;
+    
+    protected abstract void closeLog() throws IOException;
+    
+    /** Set the log file.
+     *
+     *  <p>
+     *  If <code>null</code> is passed, that signals that
+     *  the current file should be closed.
+     *  </p>
+     *
+     *  @param logFile The log file.
      *
      *  @throws IOException If an IO error occurs.
      */
-    protected void openLog() throws IOException
+    public void setLog(final File logFile) throws IOException
     {
-        log.debug("Opening log file: " + logFile);
-        
-        out = new PrintStream( new FileOutputStream( logFile.getPath(), true ) );
+        if ( logFile == null )
+        {
+            closeLog();
+            this.logFile = null;
+            return;
+        }
 
-        out.println( DateFormat.getTimeInstance().format( new Date() ) + "## log begins" );
-    }
-
-    /** Close the log.
-     *
-     *  @throws IOException If an IO error occurs.
-     */
-    protected void closeLog() throws IOException
-    {
-        log.debug("Closing log file: " + logFile);
-        out.println( DateFormat.getTimeInstance().format( new Date() ) + "## log ends" );
-        out.close();
-    }
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    //     com.werken.jerk.services.log.TextLogger
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-    /** Log a message.
-     *
-     *  @param timestamp The timestamp.
-     *  @param nick The nickname.
-     *  @param message The message text.
-     *
-     *  @throws IOException If an IO error occurs.
-     */
-    public void logMessage(Date timestamp,
-                           String nick,
-                           String message) throws IOException
-    {
-        this.out.println( DateFormat.getTimeInstance().format( timestamp )
-                          + " <" + nick + "> "
-                          + message );
+        else if ( this.logFile == null
+                  ||
+                  ! this.logFile.equals( logFile ) )
+        {
+            this.logFile = logFile;
+            openLog();
+        }
     }
 }

@@ -49,12 +49,17 @@ package com.werken.jerk;
 import java.io.IOException;
 import java.util.Date;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** A public or private irc message.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
 public class Message
 {
+    private static final Log log = LogFactory.getLog(Message.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
