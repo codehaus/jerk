@@ -111,6 +111,10 @@ public class LogChannelService implements ChannelService
         this.props   = props;
         this.logDir  = logDir;
         this.loggers = new HashMap();
+        
+        //
+        // TODO: Make the format configurable
+        //
         this.dateFormat = new SimpleDateFormat( "yyyy-MM-dd" );
     }
 
@@ -122,6 +126,8 @@ public class LogChannelService implements ChannelService
      */
     public void rollLogs()
     {
+        log.debug("Rolling logs...");
+        
         stopLogs();
         startLogs();
     }
@@ -143,6 +149,8 @@ public class LogChannelService implements ChannelService
      */
     public void startLogs()
     {
+        log.debug("Starting logs...");
+        
         String baseName = this.dateFormat.format( new Date() );
 
         Iterator nameIter = this.loggers.keySet().iterator();
@@ -164,12 +172,16 @@ public class LogChannelService implements ChannelService
                 log.error("Failed to start log: " + eachName, e);
             }
         }
+        
+        log.debug("Started logs");
     }
 
     /** Stop all logs.
      */
     public void stopLogs()
     {
+        log.debug("Stopping logs...");
+        
         Iterator loggerIter = this.loggers.values().iterator();
         Logger   eachLogger = null;
 
@@ -186,6 +198,8 @@ public class LogChannelService implements ChannelService
                 log.error("Failed to stop logger: " + eachLogger, e);
             }
         }
+        
+        log.debug("Stopped logs");
     }
 
     /** Extract the nickname from a message.
