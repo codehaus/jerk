@@ -13,7 +13,7 @@
       To run the jerk, simply type:
       </p>
 <source>
-java -cp jerk-1.0.jar com.werken.jerk.Jerk /path/to/config/directory/
+/path/to/jerk_home/bin/jerk
 </source>
 
       <p>
