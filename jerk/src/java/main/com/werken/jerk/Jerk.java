@@ -65,7 +65,7 @@ import java.net.URLDecoder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.werken.classworlds.ClassWorld;
+import org.codehaus.classworlds.ClassWorld;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
