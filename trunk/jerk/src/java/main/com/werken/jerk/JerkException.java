@@ -46,11 +46,13 @@ package com.werken.jerk;
  
  */
 
+import org.apache.commons.lang.exception.NestableException;
+
 /** Base Jerk exception.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
-public class JerkException extends Exception
+public class JerkException extends NestableException
 {
     // ------------------------------------------------------------
     //     Constructors
