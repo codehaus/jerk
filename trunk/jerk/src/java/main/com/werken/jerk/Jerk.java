@@ -365,7 +365,15 @@ public class Jerk
             }
             catch (MalformedURLException e) {
                 File file = new File(value);
-                configURL = file.toURI().toURL();
+                
+                // For 1.4 use toURI to remove spaces in filename
+                // configURL = file.toURI().toURL();
+                
+                //
+                // A preprocessor would be nice right now...
+                //
+                
+                configURL = file.toURL();
             }
         }
         
@@ -464,7 +472,10 @@ public class Jerk
         try {
             if (temp == null) {
                 String path = Jerk.class.getProtectionDomain().getCodeSource().getLocation().getFile();
-                path = URLDecoder.decode(path, "UTF-8");
+                
+                // For JDK 1.4...
+                // path = URLDecoder.decode(path, "UTF-8");
+                path = URLDecoder.decode(path);
                 
                 // home dir is expected to be lib/..
                 dir = new File(path).getParentFile().getParentFile();
@@ -477,7 +488,7 @@ public class Jerk
             dir = dir.getCanonicalFile();
         }
         catch (IOException e) {
-            throw new RuntimeException("Unable to determine home dir", e);
+            throw new JerkRuntimeException("Unable to determine home dir", e);
         }
         
         return dir;
@@ -496,7 +507,7 @@ public class Jerk
             return getHomeDir().toURL();
         }
         catch (MalformedURLException e) {
-            throw new RuntimeException("Unable to determine home URL", e);
+            throw new JerkRuntimeException("Unable to determine home URL", e);
         }
     }
 }
