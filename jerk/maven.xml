@@ -1,57 +1,171 @@
 
-<project default="java:jar"
-         xmlns:j="jelly:core">
-
-  <goal name="jerk:install"
-        prereqs="java:jar">
-
-    <echo>
-    ----------------------------------------------------------------------
-    Install to ${jerk.home}
-    ----------------------------------------------------------------------
-    </echo>
-
-    <delete dir="${jerk.home}"/>
-
-    <mkdir dir="${jerk.home}"/>
-    <mkdir dir="${jerk.home}/lib"/>
-    <mkdir dir="${jerk.home}/bin"/>
-
-    <copy file="${basedir}/target/${maven.final.name}.jar"
-          todir="${jerk.home}/lib"/>
-
-    <copy todir="${jerk.home}/lib"
-          flatten="true">
-      <fileset dir="${maven.repo.local}">
-        <j:forEach var="dep" items="${pom.dependencies}">
-          <include name="${dep.id}/jars/${dep.jar}"/>  
-        </j:forEach>
-      </fileset>
-    </copy>
-
-    <copy todir="${jerk.home}/bin">
-      <fileset dir="${maven.src.dir}/bin"/>
-    </copy>
-    <chmod perm="+x">
-      <fileset dir="${jerk.home}/bin"/>
-    </chmod>
-    <copy todir="${jerk.home}/conf">
-      <fileset dir="${maven.src.dir}/conf"/>
-    </copy>
-
-    <echo>
-    ----------------------------------------------------------------------
-    Installed to ${jerk.home}
-    ----------------------------------------------------------------------
-    Please ensure that ${jerk.home}/bin is in your $PATH.
-
-    You may create the file ${user.home}/.jerkrc and 
-    add the following line:
+<project default="jar:jar"
+         xmlns:j="jelly:core"
+         xmlns:u="jelly:util"
+         xmlns:ant="jelly:ant"
+         xmlns:maven="jelly:maven"
+         xmlns:define="jelly:define"
+         xmlns:castor="common:castor">
+  
+  <j:set var="release.id" value="${pom.standardToLegacyId(pom.id)}-${pom.currentVersion}"/>
+  
+  <preGoal name="java:compile">
+    <castor:generate
+      schema="${basedir}/src/schema/jerk-configuration.xsd"
+      binding="${basedir}/src/schema/jerk-configuration-binding.xml"
+      package="com.werken.jerk.config"
+      marshal="false"
+      types="j2"/>
+  </preGoal>
+  
+  <postGoal name="jar:jar">
+    <j:jelly xmlns="jelly:ant">
       
-      export BLISSED_HOME=${jerk.home}
-    ----------------------------------------------------------------------
-    </echo>
-
-  </goal>
-
+      <j:if test="${context.getVariable('jerk.home') == null}">
+        <j:set var="jerk.home" value="${basedir}/target/${release.id}"/>
+      </j:if>
+      
+      <!-- To prevent Log4j from puking -->
+      <mkdir dir="${jerk.home}/log"/>
+      
+      <mkdir dir="${jerk.home}/lib"/>
+      <copy file="${basedir}/target/${maven.final.name}.jar"
+            todir="${jerk.home}/lib"/>
+      
+      <mkdir dir="${jerk.home}/bin"/>
+      <copy todir="${jerk.home}/bin">
+        <fileset dir="${maven.src.dir}/bin"/>
+      </copy>
+      
+      <mkdir dir="${jerk.home}/conf"/>
+      <copy todir="${jerk.home}/conf">
+        <fileset dir="${maven.src.dir}/conf"/>
+      </copy>
+      
+      <!-- Process dependencies -->
+      <j:forEach var="artifact" items="${pom.artifacts}">
+        <j:set var="dependency" value="${artifact.dependency}"/>
+        <j:if test="${dependency.getProperty('runtime') == 'true'}">
+          <echo>Processing dependency: ${dependency.id}</echo>
+          <mkdir dir="${jerk.home}/lib"/>
+          <copy todir="${jerk.home}/lib" file="${artifact.path}"/>
+        </j:if>
+      </j:forEach>
+      
+      <!-- Cleanse some stuff -->
+      <u:available file="${jerk.home}/bin" xmlns="jelly:ant">
+        <!-- Fix permissions -->
+        <chmod perm="ugo+x">
+          <fileset dir="${jerk.home}/bin">
+            <include name="*"/>
+            <exclude name="*.bat"/>
+            <exclude name="*.cmd"/>
+          </fileset>
+        </chmod>
+        <chmod perm="ugo-x">
+          <fileset dir="${jerk.home}/bin">
+            <include name="*.bat"/>
+            <include name="*.cmd"/>
+          </fileset>
+        </chmod>
+        
+        <!-- Fix CRLF -->
+        <fixcrlf srcdir="${jerk.home}/bin" eol="lf" eof="remove">
+          <include name="*"/>
+          <exclude name="*.bat"/>
+          <exclude name="*.cmd"/>
+        </fixcrlf>
+        <fixcrlf srcdir="${jerk.home}/bin" eol="crlf">
+          <include name="*.bat"/>
+          <include name="*.cmd"/>
+        </fixcrlf>
+      </u:available>
+    </j:jelly>
+  </postGoal>
+  
+  
+  <!-- ===================================== -->
+  <!-- Castor Integration (Plugin is Broken) -->
+  <!-- ===================================== -->
+  
+  <define:taglib uri="common:castor">
+    
+    <define:tag name="generate" xmlns="jelly:ant">
+      <j:if test="${schema == null}">
+        <fail>Missing required attribute: schema</fail>
+      </j:if>
+      <j:if test="${package == null}">
+        <fail>Missing required attribute: package</fail>
+      </j:if>
+      <!-- types can be null -->
+      <!-- marshal can be null -->
+      <!-- binding can be null -->
+      
+      <j:set var="maven.castor.dest" value="${basedir}/target/castor/gen"/>
+      <mkdir dir="${maven.castor.dest}"/>
+      
+      <path id="maven.castor.compile.src.set"
+            location="${maven.castor.dest}"/>
+      <maven:addPath id="maven.compile.src.set"
+                     refid="maven.castor.compile.src.set"/>
+      
+      <u:file var="schemaFile" name="${schema}"/>
+      <j:if test="${binding != null}">
+        <u:file var="bindingFile" name="${binding}"/>
+      </j:if>
+      <j:set var="uptodatePropName" value="castor.schema.${schemaFile.name}.uptodate"/>
+      <j:set var="uptodateFile" value="${basedir}/target/castor/${schemaFile.name}.tstamp"/>
+      
+      <uptodate property="${uptodatePropName}"
+                targetfile="${uptodateFile}">
+        <!-- Evil hack to make uptodate work when I do not have a known basedir -->
+        <srcfiles dir="${schemaFile.parentFile.path}" includes="${schemaFile.name}"/>
+        <j:if test="${binding != null}">
+          <srcfiles dir="${bindingFile.parentFile.path}" includes="${bindingFile.name}"/>
+        </j:if>
+      </uptodate>
+      
+      <j:if test="${context.getVariable(uptodatePropName) != 'true'}">
+        <echo message="Generating sources for ${schema}"/>
+        
+        <path id="castor.classpath">
+          <path refid="maven.dependency.classpath"/>
+        </path>
+         
+        <java className="org.exolab.castor.builder.SourceGenerator"
+              failonerror="true"
+              fork="yes">
+          
+          <classpath refid="castor.classpath"/>
+          <arg value="-i"/>
+          <arg value="${schema}"/>
+          
+          <j:if test="${binding != null}">
+            <arg value="-binding-file"/>
+            <arg value="${binding}"/>
+          </j:if>
+          
+          <arg value="-package"/>
+          <arg value="${package}"/>
+          
+          <j:if test="${types != null}">
+            <arg value="-types"/>
+            <arg value="${types}"/>
+          </j:if>
+          
+          <j:if test="${marshal == 'false'}">
+            <arg value="-nomarshall"/>
+          </j:if>
+          
+          <arg value="-f"/>
+          <arg value="-dest"/>
+          <arg value="${maven.castor.dest}"/>
+        </java>
+        
+        <touch file="${uptodateFile}"/>
+      </j:if>
+      
+    </define:tag>
+  </define:taglib>
+  
 </project>
