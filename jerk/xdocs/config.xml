@@ -189,6 +189,8 @@ Options:
       looks like:
       </p>
       <source><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+
 <configuration xmlns="http://werken.com/xml/schema/Jerk/Configuration">
   
   <servers>
