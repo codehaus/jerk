@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<document>
+
+  <properties>
+    <title>jerk</title>
+    <author email="bob@eng.werken.com">bob mcwhirter</author>
+  </properties>
+
+  <body>
+
+  <section name="Overview">
+    <p>
+    <code>jerk</code> is a flexible, extensible IRC bot engine.
+    </p>
+
+  </section>
+
+</body>
+</document>
+
