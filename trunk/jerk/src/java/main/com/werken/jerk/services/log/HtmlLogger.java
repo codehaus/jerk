@@ -122,6 +122,7 @@ public class HtmlLogger extends AbstractLogger
         log.debug("Opening log file: " + logFile);
         
         boolean isNew = true;
+        insertion = 0;
         
         if ( this.logFile.exists() )
         {
