@@ -57,6 +57,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.Date;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /** Logger for HTML logs.
  *
@@ -83,6 +84,9 @@ public class HtmlLogger implements Logger
     /** Even/odd line for display. */
     private boolean isOdd;
 
+    /** Format to use for timestamps.  see java.text.SimpleDateFormat */
+    private String tsFormat = "hh:mm:ssa";
+    
     // ------------------------------------------------------------
     //     Constructors
     // ------------------------------------------------------------
@@ -136,7 +140,7 @@ public class HtmlLogger implements Logger
         else
         {
             this.log.seek( this.insertion );
-            String entry = "<tr><td valign='top' class='time'>" + DateFormat.getTimeInstance().format( new Date() )
+            String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
                 + "</td><td valign='top' colspan='2' class='event'>" 
                 + "log continues"
                 + "</td></tr>\n";
@@ -156,7 +160,7 @@ public class HtmlLogger implements Logger
     {
         this.log.seek( this.insertion );
 
-        String entry = "<tr><td valign='top' class='time'>" + DateFormat.getTimeInstance().format( new Date() )
+        String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
             + "</td><td valign='top' colspan='2' class='event'>" 
             + "log stops"
             + "</td></tr>\n";
@@ -224,7 +228,7 @@ public class HtmlLogger implements Logger
             this.insertion += line.length() + 1;
         }
 
-        String entry = "<tr><td valign='top' class='time'>" + DateFormat.getTimeInstance().format( new Date() )
+        String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
             + "</td><td valign='top' colspan='2' class='event'>" 
             + "log begins"
             + "</td></tr>\n";
@@ -407,7 +411,7 @@ public class HtmlLogger implements Logger
         
         try
         {
-            String entry = "<tr><td valign='top' class='time'>" + DateFormat.getTimeInstance().format( new Date() )
+            String entry = "<tr><td valign='top' class='time'>" + formatTimestamp( new Date() )
                 + "</td><td valign='top' class='nick'>" + nick
                 + "</td><td valign='top' class='text-" + evenOdd + "'>" + sanitize( message )
                 + "</td></tr>\n";
@@ -427,5 +431,12 @@ public class HtmlLogger implements Logger
                       
     }
 
+    private String formatTimestamp(Date timestamp)
+    {
+        SimpleDateFormat df = (SimpleDateFormat)DateFormat.getDateInstance(DateFormat.SHORT);
+        df.applyPattern(tsFormat);
 
+        return df.format(timestamp);
+    }
+    
 }
