@@ -57,6 +57,8 @@ import org.apache.commons.jexl.Expression;
 import org.apache.commons.jexl.ExpressionFactory;
 import org.apache.commons.jexl.resolver.FlatResolver;
 
+import com.werken.jerk.JerkRuntimeException;
+
 /**
  * Handles pasring expressions from a string.
  *
@@ -186,7 +188,7 @@ public class StringValueParser
 
             suffixLoc = input.indexOf("}", prefixLoc);
             if (suffixLoc < 0) {
-                throw new RuntimeException("Missing '}': " + input);
+                throw new JerkRuntimeException("Missing '}': " + input);
             }
             
             String expr = input.substring(prefixLoc + 2, suffixLoc);
@@ -196,7 +198,7 @@ public class StringValueParser
                 buff.append(evaluate(expr));
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed to evaluate: " + expr, e);
+                throw new JerkRuntimeException("Failed to evaluate: " + expr, e);
             }
             
             cur = suffixLoc + 1;
