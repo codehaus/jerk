@@ -49,11 +49,37 @@ package com.werken.jerk;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Enumeration;
 import java.util.Iterator;
+
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.net.URLDecoder;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.werken.classworlds.ClassWorld;
+
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.PosixParser;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.HelpFormatter;
+
+import com.werken.jerk.config.Configuration;
+import com.werken.jerk.config.ConfigurationException;
+import com.werken.jerk.config.ConfigurationReader;
+import com.werken.jerk.config.Configurator;
 
 /** The main <code>jerk</code> engine.
  *
@@ -65,6 +91,10 @@ import java.util.Iterator;
  */
 public class Jerk
 {
+    public static final String JERK_HOME = "jerk.home";
+    
+    private static final Log log = LogFactory.getLog(Jerk.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -77,19 +107,26 @@ public class Jerk
 
     /** Installed services. */
     private Map services;
-
+    
+    private ClassWorld world;
+    
     // ------------------------------------------------------------
     //     Constructors
     // ------------------------------------------------------------
 
     /** Construct.
      */
-    public Jerk()
+    public Jerk(final ClassWorld world)
     {
+        if (world == null) {
+            throw new IllegalArgumentException("world is null");
+        }
+        
         this.servers = new HashMap();
-
-        this.commands     = new HashMap();
+        this.commands = new HashMap();
         this.services = new HashMap();
+        
+        this.world = world;
     }
 
     // ------------------------------------------------------------
@@ -245,12 +282,16 @@ public class Jerk
         {
             return;
         }
-
+        
         Server server = new Server( this,
                                     address,
                                     port,
                                     nick );
-
+        
+        if (log.isDebugEnabled())
+        {
+            log.debug("Connecting to: " + address + ":" + port + ", using nick: " + nick);
+        }
         server.connect();
         
         
@@ -258,248 +299,204 @@ public class Jerk
                           server );
     }
 
-    /** Configure the jerk from a configuration directory.
-     *
-     *  @param configDir The configuration directory.
-     *  @param jerk The jerk to configure.
-     *
-     *  @throws IOException If an error occurs reading configuration
-     *          files. 
-     */
-    protected static void configure(File configDir,
-                                    Jerk jerk) throws IOException
+    private URL configURL;
+    
+    private String[] processCommandLine(final String[] args) throws Exception
     {
-        configureCommands( configDir,
-                           jerk );
-
-        configureServices( configDir,
-                           jerk );
-
-        configureServers( configDir,
-                          jerk );
-    }
-
-    /** Configure global commands from <code>commands.conf</code>.
-     *
-     *  @param configDir The configuration directory.
-     *  @param jerk The jerk to configure.
-     *
-     *  @throws IOException If an error occurs reading configuration
-     *          files. 
-     */
-    protected static void configureCommands(File configDir,
-                                            Jerk jerk) throws IOException
-    {
-        File commandsConf = new File( configDir,
-                                      "commands.conf" );
+        // create the Options
+        Options options = new Options();
+        options.addOption(OptionBuilder.withLongOpt("help")
+                                       .withDescription("Display this help message")
+                                       .create('h'));
+                                       
+        options.addOption(OptionBuilder.withLongOpt("define")
+                                       .withDescription("Define a system property")
+                                       .hasArg()
+                                       .create('D'));
+                                       
+        options.addOption(OptionBuilder.withLongOpt("file")
+                                       .withDescription("Use a specific configuration file")
+                                       .hasArg()
+                                       .create('f'));
         
-        Properties props = new Properties();
+        // create the command line parser
+        CommandLineParser parser = new PosixParser();
         
-        props.load( new FileInputStream( commandsConf ) );
+        // parse the command line arguments
+        CommandLine line = parser.parse(options, args, true);
         
-        Enumeration commandNames = props.propertyNames();
-        
-        String  className   = null;
-        String  commandName = null;
-        String  paramList   = null;
-        Class   cls         = null;
-        Command command     = null;
-
-        while ( commandNames.hasMoreElements() )
-        {
-            commandName = ((String)commandNames.nextElement()).trim();
-
-
-            try
-            {
-                className = props.getProperty( commandName ).trim();
-
-                cls = Class.forName( className );
-
-                command = (Command) cls.newInstance();
-
-                jerk.addCommand( commandName,
-                                 command );
-            }
-            catch (ClassNotFoundException e)
-            {
-                System.err.println( "unable to locate class :: " + e.getLocalizedMessage() );
-            }
-            catch (InstantiationException e)
-            {
-                System.err.println( "unable to instantiate class :: " + e.getLocalizedMessage() );
-            }
-            catch (IllegalAccessException e)
-            {
-                System.err.println( "unable to access class :: " + e.getLocalizedMessage() );
-            }
+        // Display command-line help and exit
+        if (line.hasOption('h')) {
+            System.out.println(Jerk.getBanner());
+            System.out.println();
+            
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("jerk [options]", "\nOptions:", options, "");
+            System.out.println();
+            
+            System.exit(0);
         }
-    }
-
-    /** Retrieve the sub-set of properties with the given prefix,
-     *  with the prefix removed from the name.
-     *
-     *  @param prefix The prefix.
-     *  @param props The source properties.
-     *
-     *  @return The unprefixed properties matching the prefix.
-     */
-    protected static Properties getPropertiesSubset(String prefix,
-                                                    Properties props)
-    {
-        Properties subsetProps = new Properties();
-
-        Enumeration propNames = props.propertyNames();
-        String      eachName  = null;
-
-        while ( propNames.hasMoreElements() )
-        {
-            eachName = (String) propNames.nextElement();
-
-            if ( eachName.startsWith( prefix ) )
-            {
-                subsetProps.setProperty( eachName.substring( prefix.length() ),
-                                         props.getProperty( eachName ) );
-            }
-        }
-
-        return subsetProps;
-    }
-
-    /** Configure global services from <code>services.conf</code>.
-     *
-     *  @param configDir The configuration directory.
-     *  @param jerk The jerk to configure.
-     *
-     *  @throws IOException If an error occurs reading configuration
-     *          files. 
-     */
-    protected static void configureServices(File configDir,
-                                            Jerk jerk) throws IOException
-    {
-        File servicesConf = new File( configDir,
-                                      "services.conf" );
         
-        Properties props = new Properties();
-        
-        props.load( new FileInputStream( servicesConf ) );
-        
-        Enumeration services = props.propertyNames();
-        
-        String serviceName = null;
-        String className = null;
-
-        Service service = null;
-        
-        while ( services.hasMoreElements() )
-        {
-            serviceName = (String) services.nextElement();
-
-            if ( serviceName.indexOf( "." ) >= 0 )
-            {
-                continue;
-            }
-
-            className = props.getProperty( serviceName );
-
-            try
-            {
-                Class serviceClass = Class.forName( className );
-                service = (Service) serviceClass.newInstance();
-
-                Properties serviceProps = getPropertiesSubset( "service." + serviceName + "." ,
-                                                               props );
-
-                Properties chanServiceProps = getPropertiesSubset( "channel." + serviceName + ".",
-                                                                   props );
-
-                service.initialize( jerk,
-                                    serviceProps,
-                                    chanServiceProps );
-
-                jerk.addService( serviceName,
-                                 service );
-
-                Command serviceCommand = service.getCommand();
-
-                if ( serviceCommand != null )
-                {
-                    jerk.addCommand( serviceName,
-                                     serviceCommand );
+        // Set system properties
+        if (line.hasOption('D')) {
+            String[] values = line.getOptionValues('D');
+            
+            for (int i=0; i<values.length; i++) {
+                String name, value;
+                int j = values[i].indexOf("=");
+                
+                if (j == -1) {
+                    name = values[i];
+                    value = "true";
                 }
-            }
-            catch (Exception e)
-            {
-                System.err.println( "failed to load service " + serviceName + " :: " + e.getLocalizedMessage() );
+                else {
+                    name = values[i].substring(0, j);
+                    value = values[i].substring(j + 1, values[i].length());
+                }
+                
+                System.setProperty(name.trim(), value);
             }
         }
+        
+        if (line.hasOption('f')) {
+            String value = line.getOptionValue('f');
+            try {
+                configURL = new URL(value);
+            }
+            catch (MalformedURLException e) {
+                File file = new File(value);
+                configURL = file.toURI().toURL();
+            }
+        }
+        
+        return line.getArgs();
     }
-
-    /** Configure the jerk's IRC server connection from <code>servers.conf</code>.
-     *
-     *  @param configDir The configuration directory.
-     *  @param jerk The jerk to configure.
-     *
-     *  @throws IOException If an error occurs reading configuration
-     *          files. 
-     */
-    protected static void configureServers(File configDir,
-                                           Jerk jerk) throws IOException
+    
+    public void boot(String[] args) throws Exception
     {
-        File serversConf = new File( configDir,
-                                    "servers.conf" );
-
-        Properties props = new Properties();
-
-        props.load( new FileInputStream( serversConf ) );
-
-        Enumeration servers = props.propertyNames();
-
-        String address = null;
-        String portStr = null;
-        int    port = 0;
-
-        while ( servers.hasMoreElements() )
-        {
-            address = (String) servers.nextElement();
-            portStr = props.getProperty( address );
-            port = Integer.parseInt( portStr );
-
-            jerk.connect( address,
-                          port,
-                          "jerk" );
+        if (args == null) {
+            throw new IllegalArgumentException("args is null");
         }
+        
+        // Process command-line options
+        args = processCommandLine(args);
+        
+        if (configURL == null) {
+            URL homeURL= Jerk.getHomeURL();
+            configURL = new URL( homeURL, "conf/jerk.conf" );
+        }
+        
+        ConfigurationReader reader = new ConfigurationReader();
+        Configuration config = reader.read(configURL);
+        
+        configure(config);
     }
-
+    
+    public void configure(final Configuration config) throws JerkException
+    {
+        log.debug("Configuring...");
+        
+        Configurator c = new Configurator(this);
+        c.configure(config);
+        
+        log.debug("Configured");
+    }
+    
     // ------------------------------------------------------------
     //     Class methods
     // ------------------------------------------------------------
-
-    /** Main command-line entrypoint to start the jerk.
-     *
-     *  @param args Command-line arguments.
-     */
-    public static void main(String[] args)
+    
+    public static void main(final String[] args, final ClassWorld world)
     {
-        if ( args.length != 1 )
-        {
-            System.err.println( "must specify a configuration directory" );
-            System.exit( 1 );
+        try {
+            Jerk jerk = new Jerk(world);
+            jerk.boot(args);
         }
-
-        Jerk jerk = new Jerk();
-
-        File configDir = new File( args[0] );
-
-        try
-        {
-            configure(configDir,
-                      jerk);
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
-        catch (IOException e)
-        {
-            System.err.println( e );
-            System.exit( 1 );
+    }
+    
+    public static void main(final String[] args) throws Exception
+    {
+        ClassWorld world = new ClassWorld();
+        main(args, world);
+    }
+    
+    /////////////////////////////////////////////////////////////////////////
+    //                                 Misc                                //
+    /////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Get the fancy <em>Jerk</em> banner text.
+     *
+     * @return The fancy <em>Jerk</em> banner text.
+     */
+    public static String getBanner()
+    {
+        StringWriter writer = new StringWriter();
+        PrintWriter out = new PrintWriter(writer);
+        
+        out.println("     _           _");
+        out.println("    | | ___ _ __| | __");
+        out.println(" _  | |/ _ \\ '__| |/ /");
+        out.println("| |_| |  __/ |  |   <");
+        out.print(" \\___/ \\___|_|  |_|\\_\\");
+        out.flush();
+        
+        return writer.toString();
+    }
+    
+    /**
+     * Get the <em>Jerk</em> home directory
+     *
+     * @return The <em>Jerk</em> home directory
+     *
+     * @throws RuntimeException     Unable to determine home dir.
+     */
+    public static File getHomeDir()
+    {
+        // Determine what our home directory is
+        String temp = System.getProperty(JERK_HOME);
+        File dir = null;
+        
+        try {
+            if (temp == null) {
+                String path = Jerk.class.getProtectionDomain().getCodeSource().getLocation().getFile();
+                path = URLDecoder.decode(path, "UTF-8");
+                
+                // home dir is expected to be lib/..
+                dir = new File(path).getParentFile().getParentFile();
+            }
+            else {
+                dir = new File(temp);
+            }
+            
+            // Make sure the home dir does not have any ../ bits
+            dir = dir.getCanonicalFile();
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to determine home dir", e);
+        }
+        
+        return dir;
+    }
+    
+    /**
+     * Get the <em>Jerk</em> home URL
+     *
+     * @return The <em>Jerk</em> home URL
+     *
+     * @throws RuntimeException     Unable to determine home URL.
+     */
+    public static URL getHomeURL()
+    {
+        try {
+            return getHomeDir().toURL();
+        }
+        catch (MalformedURLException e) {
+            throw new RuntimeException("Unable to determine home URL", e);
         }
     }
 }

@@ -53,12 +53,17 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** An IRC channel on a <code>Server</code>.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
 public class Channel 
 {
+    private static final Log log = LogFactory.getLog(Channel.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -89,7 +94,7 @@ public class Channel
 
         this.services = new HashMap();
     }
-
+    
     // ------------------------------------------------------------
     //     Instance methods
     // ------------------------------------------------------------
@@ -199,7 +204,7 @@ public class Channel
             }
             catch (JerkException e)
             {
-                System.err.println( e.getLocalizedMessage() );
+                log.error("Failed to accept message", e);
             }
         }
     }

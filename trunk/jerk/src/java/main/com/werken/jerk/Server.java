@@ -51,10 +51,15 @@ import java.io.OutputStreamWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+
 import java.net.Socket;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /** A jerk-connected IRC server.
  *
@@ -62,6 +67,8 @@ import java.util.Collection;
  */
 public class Server implements Runnable
 {
+    private static final Log log = LogFactory.getLog(Server.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -215,7 +222,7 @@ public class Server implements Runnable
         {
             throw new JerkException( "already joined" );
         }
-
+        
         Channel channel = new Channel( this,
                                        name );
 
@@ -234,9 +241,12 @@ public class Server implements Runnable
     {
         if ( this.channels.containsKey( channel.getName() ) )
         {
+            log.debug("Ignorning duplicate request to join channel: " + channel.getName());
             return;
         }
-
+        
+        log.debug("Joining channel: " + channel.getName());
+        
         serverWrite( "JOIN " + channel.getName() );
 
         String msg = null;
@@ -309,9 +319,12 @@ public class Server implements Runnable
     {
         if ( ! this.channels.containsKey( channel.getName() ) )
         {
+            log.debug("Ignorning duplicate request to part channel: " + channel.getName());
             return;
         }
-
+        
+        log.debug("Parting channel: " + channel.getName());
+        
         serverWrite( "PART " + channel.getName() + " :part");
 
         String msg = null;
@@ -412,7 +425,7 @@ public class Server implements Runnable
 
         this.shouldRun = true;
 
-        System.err.println( "connect to " + getAddress() + ":" + getPort() );
+        log.debug( "Connect to " + getAddress() + ":" + getPort() + "..." );
 
         this.socket = new Socket( getAddress(),
                                   getPort() );
@@ -431,12 +444,14 @@ public class Server implements Runnable
                     }
                     catch (IOException e)
                     {
-                        System.err.println( e.getLocalizedMessage() );
+                        log.debug( e.getLocalizedMessage() );
                     }
                 }
             }
             );
         thread.start();
+        
+        log.debug( "Connected" );
     }
 
     /** Disconnect from this IRC server.
@@ -446,6 +461,8 @@ public class Server implements Runnable
      */
     public void disconnect() throws IOException
     {
+        log.debug( "Disconnecting..." );
+        
         this.shouldRun = false;
     }
 
@@ -525,6 +542,8 @@ public class Server implements Runnable
      */
     protected void dispatchPrivateMessage(Message message) throws IOException
     {
+        log.debug( "Dispatching private message: " + message );
+        
         dispatchMessageInternal( message );
     }
 
@@ -536,6 +555,8 @@ public class Server implements Runnable
      */
     protected void dispatchPublicMessage(Message message) throws IOException
     {
+        log.debug( "Dispatching public message: " + message );
+        
         Tokenizer tokens = new Tokenizer( message.getPayload() );
 
         String first = tokens.consumeNextToken();
@@ -553,12 +574,15 @@ public class Server implements Runnable
      */
     protected void dispatchMessageInternal(Message message) throws IOException
     {
+        log.debug( "Dispatching message: " + message );
+        
         Tokenizer tokens = new Tokenizer( message.getPayload() );
 
         Command command = this.jerk.getCommand( tokens.peekNextToken() );
-
+        
         if ( command != null )
         {
+            log.debug( "Dispatching message to command: " + command );
             command.perform( message );
             return;
         }
@@ -579,6 +603,8 @@ public class Server implements Runnable
      */
     public void run()
     {
+        log.debug( "Running..." );
+        
         String msg = null;
 
         try
@@ -588,12 +614,16 @@ public class Server implements Runnable
         }
         catch (IOException e)
         {
-            System.err.println( e.getLocalizedMessage() );
+            log.error("Initial handshake failed", e);
             return;
         }
 
         int multiplier = 1;
-
+        
+        //
+        // TODO: Handle stale connections & reconnecting
+        //
+        
         try
         {
             while ( this.shouldRun )
@@ -628,8 +658,10 @@ public class Server implements Runnable
         }
         catch (IOException e)
         {
-            System.err.println( e.getLocalizedMessage() );
+            log.error("Communication failure", e);
         }
+        
+        log.debug( "Finished" );
     }
 
     /** Write a bare low-level message to the server.
@@ -640,6 +672,8 @@ public class Server implements Runnable
      */
     public void serverWrite(String msg) throws IOException
     {
+        log.debug("Writing message to server: " + msg);
+        
         this.out.write( msg );
         this.out.newLine();
         this.out.flush();
@@ -654,12 +688,15 @@ public class Server implements Runnable
      */
     public String serverRead() throws IOException
     {
+        String msg = null;
+        
         if ( this.in.ready() )
         {
-            return in.readLine();
+            msg = in.readLine();
+            log.debug("Read message: " + msg);
         }
-
-        return null;
+        
+        return msg;
     }
 
     /** Produce a textual representation suitable for debugging.

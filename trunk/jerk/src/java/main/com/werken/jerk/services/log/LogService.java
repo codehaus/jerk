@@ -63,12 +63,17 @@ import java.util.TimerTask;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** Service to log channel text in multiple formats.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
 public class LogService implements Service
 {
+    private static final Log log = LogFactory.getLog(LogService.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -104,7 +109,7 @@ public class LogService implements Service
      */
     protected void registerRoller()
     {
-        System.err.println( "registering daily log roller event" );
+        log.debug( "registering daily log roller event" );
 
         Calendar calendar = Calendar.getInstance();
 
@@ -126,7 +131,7 @@ public class LogService implements Service
         calendar.roll( Calendar.DATE,
                        1 );
 
-        System.err.println( "first roll: " + calendar.getTime() );
+        log.debug( "first roll: " + calendar.getTime() );
 
         this.timer = new Timer( true );
 
@@ -147,7 +152,7 @@ public class LogService implements Service
      */
     protected void rollAllLogs()
     {
-        System.err.println( "rolling all logs" );
+        log.debug( "rolling all logs" );
 
         Iterator serviceIter = this.channelServices.values().iterator();
         LogChannelService eachService = null;
@@ -184,6 +189,8 @@ public class LogService implements Service
      */
     public ChannelService startChannelService(Channel channel) throws JerkException
     {
+        log.debug("Starting service for channel: " + channel.getName());
+        
         LogChannelService service = new LogChannelService( channel,
                                                            new Properties( this.chanServiceProps ),
                                                            getLogDir() );
@@ -205,10 +212,12 @@ public class LogService implements Service
      */
     public void stopChannelService(Channel channel) throws JerkException
     {
+        log.debug("Stopping service for channel: " + channel.getName());
+        
         LogChannelService service = (LogChannelService) this.channelServices.get( channel );
-
+        
         service.shutdown();
-
+        
         this.channelServices.remove( service );
     }
 
@@ -234,9 +243,9 @@ public class LogService implements Service
                            Properties serviceProps,
                            Properties chanServiceProps) throws JerkException
     {
-        System.err.println( "initializing log services" );
+        log.debug( "Initializing..." );
 
-        System.err.println( serviceProps );
+        log.debug( serviceProps );
 
         String logDirName = serviceProps.getProperty( "dir" );
 
@@ -270,7 +279,7 @@ public class LogService implements Service
         {
             if ( logDir.mkdirs() )
             {
-                System.err.println( "created log directory " + logDir );
+                log.debug( "created log directory " + logDir );
             }
             else
             {
@@ -282,13 +291,21 @@ public class LogService implements Service
         this.chanServiceProps = chanServiceProps;
 
         registerRoller();
+        
+        log.debug( "Initialized" );
     }
 
     /** Shutdown the jerk-wide service.
      */
     public void shutdown()
     {
-        System.err.println( "shutting down log services" );
+        log.debug( "Shutting down..." );
+        
+        //
+        // TODO: ????
+        //
+        
+        log.debug( "Shutdown" );
     }
 }
 

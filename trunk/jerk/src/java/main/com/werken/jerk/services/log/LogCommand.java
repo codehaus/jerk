@@ -51,12 +51,17 @@ import com.werken.jerk.Tokenizer;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /** Command hook for the logging service.
  *
  *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
  */
 public class LogCommand implements Command
 {
+    private static final Log log = LogFactory.getLog(LogCommand.class);
+    
     // ------------------------------------------------------------
     //     Instance members
     // ------------------------------------------------------------
@@ -89,7 +94,7 @@ public class LogCommand implements Command
      */
     public void perform(Message message) throws IOException
     {
-        System.err.println( "log command: " + message );
+        log.debug( "log command: " + message );
 
         Tokenizer tokens = new Tokenizer( message.getPayload() );
 
