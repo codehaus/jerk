@@ -42,6 +42,16 @@
         <fileset dir="${maven.src.dir}/conf"/>
       </copy>
       
+      <!-- For now copy the log service resources into place, should
+         | really move these into a service-resources/log dir or something
+         | so the build can simply copy service-resources/** to ${jerk.home}/service
+       -->
+      <mkdir dir="${jerk.home}/service/log"/>
+      <copy todir="${jerk.home}/service/log">
+        <fileset dir="${maven.src.dir}/css"/>
+        <fileset dir="${maven.src.dir}/scripts"/>
+      </copy>
+      
       <!-- Process dependencies -->
       <j:forEach var="artifact" items="${pom.artifacts}">
         <j:set var="dependency" value="${artifact.dependency}"/>
