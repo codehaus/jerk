@@ -8,70 +8,219 @@
 
   <body>
 
-    <section name="Configuration">
+    <section name="Configuration Overview">
     <p>
-    When <a href="usage.html">using</a> the Jerk, you provide a
-    configuration <i>directory</i> on the command line.  The jerk
-    will read several files from this directory to configure itself.
+    When <a href="usage.html">using</a> the Jerk you do not need to specify
+    any options unless you wish to use a specific configuration file.  By default
+    the Jerk will look for a <em>conf/jerk.conf</em> file its home directory.
     </p>
-    </section>
+    
+    <p>
+    The Jerk will automatically detect where it's home directory is and set the
+    <em>jerk.home</em> system property accordingly.  If you want to change the
+    default value, set the <em>JERK_HOME</em> environment variable.
+    </p>
+    
+    <p>
+    To specify a configuration file use the -f or --file option:
+    </p>
+    
+    <source>jerk --file /path/to/my/jerk.conf</source>
+    
+    <p>
+    You can also specify a URL to a remote file:
+    </p>
+    
+    <source>jerk --file http://localhost/myjerk.conf</source>
+    
+    <p>
+    You can see all of the command line configuration options by specifing
+    the -h or --help option:
+    </p>
+    
+    <source>jerk --help</source>
+    
+    <source><![CDATA[
+     _           _
+    | | ___ _ __| | __
+ _  | |/ _ \ '__| |/ /
+| |_| |  __/ |  |   <
+ \___/ \___|_|  |_|\_\
 
-    <section name="servers.conf">
+usage: jerk [options]
+
+Options:
+ -D,--define <arg>   Define a system property
+ -f,--file <arg>     Use a specific configuration file
+ -h,--help           Display this help message
+]]></source>
+    
+    </section>
+    
+    <section name="Configuration Syntax">
+    
       <p>
-      Within the configuration directory should be a file
-      called <code>servers.conf</code> which specifies to
-      address and port of server to connect to when launched.
+      The Jerk configuration is XML controlled by an
+      <a href="jerk-configuration.xsd">XML schema</a>.  The main elements
+      are:
       </p>
-
-<source>
-irc.werken.com:6667
-</source>
-
-    </section>
-
-    <section name="services.conf">
+      
+      <ul>
+        <li>configuration</li>
+        <li>commands</li>
+        <li>services</li>
+        <li>servers</li>
+      </ul>
+      
       <p>
-      Within the configuration directory should be a file
-      called <code>services.conf</code> which specifies
-      configuration parameters for services.
+      The <em>configuration</em> element should specify the proper XML namespace
+      or else things are likely to break:
       </p>
+      
+      <source><![CDATA[
+<configuration xmlns="http://werken.com/xml/schema/Jerk/Configuration">
+  <!-- ... -->
+</configuration>
+]]></source>
 
-<source>
-# Define the 'log' service
-log : com.werken.jerk.services.log.LogService
-
-# service-wide config props
-service.log.dir  : ./logs/
-
-# default per-channel config props
-channel.log.txt   : on
-channel.log.html  : on
-</source>
- 
     </section>
-
-    <section name="commands.conf">
+    
+    <section name="Commands">
       <p>
-      Within the configuration directory should be a file called
-      <code>commands.conf</code>.  It is a java properties file
-      where each property line has the name of the command as
-      the name, and the name of the command's class as the
-      value.
+      The <em>commands</em> element describes the list of available to the Jerk.
+      Only one <em>commands</em> element may exist and it must be a direct child
+      of the root <em>configuration</em> element.
       </p>
+      
+      <p>
+      Command instances are configured by one or more nested <em>command</em>
+      elements:
+      </p>
+      
+      <source><![CDATA[
+<commands>
+  <command name="join" code="com.werken.jerk.commands.core.Join"/>
+  <command name="stop" code="com.werken.jerk.commands.core.Stop"/>
+  <!-- ... -->
+</commands>
+]]></source>
+      
+      <p>Required attributes:</p>
+      <ul>
+        <li><b>name</b> - The name of the command</li>
+        <li><b>code</b> - The fully qualified name of the command class</li>
+      </ul>
+      
+    </section>
+    
+    <section name="Services">
+      <p>
+      Jerk services are defined by the <em>services</em> element.
+      Only one <em>services</em> element may exist and it must be a direct child
+      of the root <em>configuration</em> element.
+      </p>
+      
+      <p>
+      Individual services are configured by one or more nested <em>service</em>
+      elements:
+      </p>
+      
+      <source><![CDATA[
+<services>
+  <service name="log" code="com.werken.jerk.services.log.LogService">
+    <properties>
+      <property name="dir">${jerk.home}/service/log</property>
+    </properties>
+    
+    <channel-properties>
+      <property name="txt">on</property>
+      <property name="html">on</property>
+    </channel-properties>
+  </service>
+</services>]]></source>
+      
+      <p>Required attributes:</p>
+      <ul>
+        <li><b>name</b> - The unique name of the service</li>
+        <li><b>code</b> - The fully qualified name of the service class</li>
+      </ul>
+      
+      <p>Optional nested elements:</p>
+      <ul>
+        <li><b>properties</b> - Configuration properties for the service</li>
+        <li><b>channel-properties</b> - Configuration properties for the service channel(s)</li>
+      </ul>
+    </section>
+    
+    <section name="Servers">
+      <p>
+      IRC servers to connect to are specified using the <em>servers</em> element.
+      Only one <em>commands</em> element may exist and it must be a direct child
+      of the root <em>configuration</em> element.
+      </p>
+      
+      <p>
+      The IRC servers to connect to are controlled by one or more nested <em>server</em>
+      elements:
+      </p>
+      
+      <source><![CDATA[
+<servers>
+  <server hostname="irc.werken.com" port="6667" nickname="jerk"/>
+  <!-- ... -->
+</servers>
+]]></source>
+      
+      <p>Required attributes:</p>
+      <ul>
+        <li><b>hostname</b> - The hostname of the IRC server to connect to</li>
+      </ul>
+      
+      <p>Optional attributes:</p>
+      <ul>
+        <li><b>port</b> - The port number of the IRC server to connect to; Defaults to <em>6667</em></li>
+        <li><b>nickname</b> - The nickname which Jerk will tell the IRC server; Defaults to <em>jerk</em></li>
+      </ul>
+    </section>
+    
+    <section name="Example Configuration">
+      <p>
+      The following is an example of what the Jerk's configuration
+      looks like:
+      </p>
+      <source><![CDATA[
+<configuration xmlns="http://werken.com/xml/schema/Jerk/Configuration">
+  
+  <servers>
+    <server hostname="irc.werken.com" port="6667" nickname="jerk"/>
+  </servers>
+  
+  <commands>
+    <command name="join" code="com.werken.jerk.commands.core.Join"/>
+    <command name="part" code="com.werken.jerk.commands.core.Part"/>
+    <command name="start" code="com.werken.jerk.commands.core.Start"/>
+    <command name="stop" code="com.werken.jerk.commands.core.Stop"/>
+    <command name="say" code="com.werken.jerk.commands.say.Say"/>
+  </commands>
+  
+  <services>
+    <service name="log" code="com.werken.jerk.services.log.LogService">
+      <properties>
+        <property name="dir">${jerk.home}/service/log</property>
+      </properties>
+      
+      <channel-properties>
+        <property name="txt">on</property>
+        <property name="html">on</property>
+      </channel-properties>
+    </service>
+  </services>
 
-<source>
-join : com.werken.jerk.commands.core.Join
-part : com.werken.jerk.commands.core.Part
-
-start : com.werken.jerk.commands.core.Start
-stop  : com.werken.jerk.commands.core.Stop
-
-help  : com.werken.jerk.commands.core.Help
-say   : com.werken.jerk.commands.say.Say
-</source>
+</configuration>
+]]></source>
 
     </section>
-
+    
   </body>
 
 </document>
