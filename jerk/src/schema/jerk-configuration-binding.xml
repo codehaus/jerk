@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Revision$ $Date$ -->
+
+<binding xmlns="http://www.castor.org/SourceGenerator/Binding"
+         defaultBindingType="element">
+
+  <!-- Define the {namespace,package} binding -->
+  
+  <package>
+    <name>com.werken.jerk.config</name>
+    <namespace>http://werken.com/xml/schema/Jerk/Configuration</namespace>
+  </package>
+  
+  <!-- Custom element binding -->
+  
+  <elementBinding name="/properties">
+    <java-class name="PropertiesConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/properties/property">
+    <java-class name="PropertyConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/commands">
+    <java-class name="CommandsConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/commands/command">
+    <java-class name="CommandConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/servers">
+    <java-class name="ServersConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/servers/server">
+    <java-class name="ServerConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services">
+    <java-class name="ServicesConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services/service">
+    <java-class name="ServiceConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services/service/properties">
+    <java-class name="ServicePropertiesConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services/service/properties/property">
+    <java-class name="PropertyConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services/service/channel-properties">
+    <java-class name="ServiceChannelPropertiesConfig"/>
+  </elementBinding>
+  
+  <elementBinding name="/services/service/channel-properties/property">
+    <java-class name="PropertyConfig"/>
+  </elementBinding>
+</binding>
