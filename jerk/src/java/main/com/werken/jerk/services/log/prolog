@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>$CHANNEL$ - $DATE$</title>
+    <title>${channel.name} - ${DATE}</title>
     
     <link rel="stylesheet" href="../style.css" type="text/css" />
     <link rel="alternate stylesheet" href="../textLarge.css" type="text/css" title="large">
@@ -15,7 +15,9 @@
       <table>
         <tr>
          <td class="banner" colspan="2">
-  		   $CHANNEL$<br \>$DATE$
+           <span>${channel.name}</span>
+           <br \>
+           <span>${DATE}</span>
          </td>
 		 <td class="banner" align="right">
            <a href="http://www.werken.com/"><img src="http://images.werken.com/werken_large.gif" border="0"></a>
