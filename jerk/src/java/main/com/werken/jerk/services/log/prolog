@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>$CHANNEL$ - $DATE$</title>
+    
+    <link rel="stylesheet" href="../style.css" type="text/css" />
+
+  </head>
+
+  <body>
+    <center>
+      <table>
+        <tr>
+         <td class="banner" colspan="2">
+  		   $CHANNEL$<br \>$DATE$
+         </td>
+		 <td class="banner" align="right">
+           <a href="http://www.werken.com/"><img src="http://images.werken.com/werken_large.gif" border="0"></a>
+		 </td>
+		</tr>
+
+<!-- 
+  ||  begin entries
+  -->
+
