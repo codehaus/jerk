@@ -21,27 +21,27 @@
   <description>
   </description>
 
-  <url>http://jerk.werken.com/</url>
+  <url>http://jerk.codehaus.org/</url>
 
   <mailingLists>
     <mailingList>
       <name>jerk interest</name>
-      <subscribe>http://lists.werken.com/mailman/listinfo/jerk-interest</subscribe>
-      <unsubscribe>http://lists.werken.com/mailman/listinfo/jerk-interest</unsubscribe>
-      <archive>http://lists.werken.com/pipermail/jerk-interest/</archive>
+      <subscribe>http://lists.codehaus.org/mailman/listinfo/jerk-interest</subscribe>
+      <unsubscribe>http://lists.codehaus.org/mailman/listinfo/jerk-interest</unsubscribe>
+      <archive>http://lists.codehaus.org/pipermail/jerk-interest/</archive>
     </mailingList>
     <mailingList>
       <name>jerk cvs messages</name>
-      <subscribe>http://lists.werken.com/mailman/listinfo/jerk-cvs</subscribe>
-      <unsubscribe>http://lists.werken.com/mailman/listinfo/jerk-cvs</unsubscribe>
-      <archive>http://lists.werken.com/pipermail/jerk-interest/</archive>
-      <archive>http://lists.werken.com/pipermail/jerk-cvs/</archive>
+      <subscribe>http://lists.codehaus.org/mailman/listinfo/jerk-cvs</subscribe>
+      <unsubscribe>http://lists.codehaus.org/mailman/listinfo/jerk-cvs</unsubscribe>
+      <archive>http://lists.codehaus.org/pipermail/jerk-interest/</archive>
+      <archive>http://lists.codehaus.org/pipermail/jerk-cvs/</archive>
     </mailingList>
   </mailingLists>
 
-  <siteAddress>jerk.werken.com</siteAddress>
+  <siteAddress>jerk.codehaus.org</siteAddress>
   <siteDirectory>/www/jerk.werken.com</siteDirectory>
-  <issueTrackingUrl>http://jira.werken.com/</issueTrackingUrl>
+  <issueTrackingUrl>http://jira.codehaus.org/</issueTrackingUrl>
 
   <repository>
     <connection>scm:cvs::pserver:anonymous@cvs.werken.com:/cvsroot/jerk:jerk</connection>
