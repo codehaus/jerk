@@ -109,6 +109,10 @@ public class LogService implements Service
      */
     protected void registerRoller()
     {
+        //
+        // TODO: Make this configurable
+        //
+        
         log.debug( "registering daily log roller event" );
 
         Calendar calendar = Calendar.getInstance();
@@ -134,7 +138,7 @@ public class LogService implements Service
         log.debug( "first roll: " + calendar.getTime() );
 
         this.timer = new Timer( true );
-
+        
         this.timer.schedule(
             new TimerTask() 
             {
@@ -160,7 +164,6 @@ public class LogService implements Service
         while ( serviceIter.hasNext() )
         {
             eachService = (LogChannelService) serviceIter.next();
-
             eachService.rollLogs();
         }
     }
