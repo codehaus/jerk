@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Revision$ $Date$ -->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://werken.com/xml/schema/Jerk/Configuration"
+            targetNamespace="http://werken.com/xml/schema/Jerk/Configuration"
+            elementFormDefault="qualified">
+
+  <xsd:annotation>
+    <xsd:documentation>
+      This is the XML Schema for Apache Geronimo Twiddle Configuration.
+    </xsd:documentation>
+  </xsd:annotation>
+  
+  <xsd:element name="configuration">
+    <xsd:annotation>
+      <xsd:documentation>
+        The root configuration element.
+      </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element ref="properties" minOccurs="0" maxOccurs="1"/>
+        <xsd:element ref="commands" minOccurs="1" maxOccurs="1"/>
+        <xsd:element ref="services" minOccurs="1" maxOccurs="1"/>
+        <xsd:element ref="servers" minOccurs="1" maxOccurs="1"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="description" type="xsd:string">
+    <xsd:annotation>
+      <xsd:documentation>
+        The definition of a generic text description.
+      </xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  
+  <xsd:element name="properties">
+    <xsd:annotation>
+      <xsd:documentation>
+        Definitions of system properties.
+      </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="property" minOccurs="0" maxOccurs="unbounded">
+          <xsd:annotation>
+            <xsd:documentation>
+              A single system property definition.
+            </xsd:documentation>
+          </xsd:annotation>
+          
+          <xsd:complexType>
+            <xsd:simpleContent>
+              <xsd:extension base="xsd:string">
+               <xsd:attribute name="name" use="required" type="xsd:string"/>
+              </xsd:extension>
+            </xsd:simpleContent>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="commands">
+    <xsd:annotation>
+      <xsd:documentation>
+        The definition of commands.
+      </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="command" minOccurs="0" maxOccurs="unbounded">
+          <xsd:annotation>
+            <xsd:documentation>
+              The definition of a single command.
+            </xsd:documentation>
+          </xsd:annotation>
+          
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="description" minOccurs="0" maxOccurs="1"/>
+            </xsd:sequence>
+            
+            <xsd:attribute name="name" use="required" type="xsd:string"/>
+            <xsd:attribute name="code" use="required" type="xsd:string"/>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="services">
+    <xsd:annotation>
+      <xsd:documentation>
+        The definition of services.
+      </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="service" minOccurs="0" maxOccurs="unbounded">
+          <xsd:annotation>
+            <xsd:documentation>
+              The definition of a single service.
+            </xsd:documentation>
+          </xsd:annotation>
+          
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="description" minOccurs="0" maxOccurs="1"/>
+              <xsd:element name="properties">
+                <xsd:annotation>
+                  <xsd:documentation>
+                    Definitions of service properties.
+                  </xsd:documentation>
+                </xsd:annotation>
+                
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="property" minOccurs="0" maxOccurs="unbounded">
+                      <xsd:annotation>
+                        <xsd:documentation>
+                          A single service property definition.
+                        </xsd:documentation>
+                      </xsd:annotation>
+                      
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                           <xsd:attribute name="name" use="required" type="xsd:string"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+              
+              <xsd:element name="channel-properties">
+                <xsd:annotation>
+                  <xsd:documentation>
+                    Definitions of service channel properties.
+                  </xsd:documentation>
+                </xsd:annotation>
+                
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="property" minOccurs="0" maxOccurs="unbounded">
+                      <xsd:annotation>
+                        <xsd:documentation>
+                          A single service channel property definition.
+                        </xsd:documentation>
+                      </xsd:annotation>
+                      
+                      <xsd:complexType>
+                        <xsd:simpleContent>
+                          <xsd:extension base="xsd:string">
+                           <xsd:attribute name="name" use="required" type="xsd:string"/>
+                          </xsd:extension>
+                        </xsd:simpleContent>
+                      </xsd:complexType>
+                    </xsd:element>
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+            
+            <xsd:attribute name="name" use="required" type="xsd:string"/>
+            <xsd:attribute name="code" use="required" type="xsd:string"/>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="servers">
+    <xsd:annotation>
+      <xsd:documentation>
+        The definition of servers.
+      </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="server" minOccurs="0" maxOccurs="unbounded">
+          <xsd:annotation>
+            <xsd:documentation>
+              The definition of a single server.
+            </xsd:documentation>
+          </xsd:annotation>
+          
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element ref="description" minOccurs="0" maxOccurs="1"/>
+            </xsd:sequence>
+            
+            <xsd:attribute name="hostname" use="required" type="xsd:string"/>
+            <xsd:attribute name="port" use="optional" type="xsd:integer"/>
+            <xsd:attribute name="nickname" use="optional" type="xsd:string"/>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+</xsd:schema>
