@@ -93,10 +93,13 @@
     </unitTest>
 
     <resources>
-      <includes>
-        <include>com/werken/jerk/services/log/prolog</include>
-        <include>com/werken/jerk/services/log/epilog</include>
-      </includes>
+      <resource>
+        <directory>src/java/main</directory>
+        <includes>
+          <include>com/werken/jerk/services/log/prolog</include>
+          <include>com/werken/jerk/services/log/epilog</include>
+        </includes>
+      </resource>
     </resources>
 
     <jars/>
