@@ -64,4 +64,19 @@ public class JerkException extends Exception
     {
         super( message );
     }
+    
+    public JerkException(Throwable cause)
+    {
+        super( cause );
+    }
+    
+    public JerkException(String message, Throwable cause)
+    {
+        super( message, cause );
+    }
+    
+    public JerkException()
+    {
+        super();
+    }
 }
