@@ -12,6 +12,7 @@
       <item name="About jerk"          href="/index.html"/> 
       <item name="Usage"               href="/usage.html"/> 
       <item name="Configuration"       href="/config.html"/> 
+      <item name="Examples"            href="http://irc.werken.com/channels/maven/"/>
       <item name="Releases"            href="/releases.html"/> 
       <item name="CVS Access"          href="/cvs.html"/>
       <item name="IRC"                 href="/irc.html"/>
