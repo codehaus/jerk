@@ -153,14 +153,14 @@ public class HtmlLogger extends AbstractLogger
             PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(latestFile)));
             
             try {
-                writer.println("<html><head>");
-                writer.println("<script language=\"javascript\">");
+                writer.println("<html><head><script language=\"javascript\">");
                 writer.println("<!--");
                 writer.println("document.location.replace(\"" + logFile.getName() + "\");");
                 writer.println("//-->");
-                writer.println("</script>");
+                writer.println("</script></head>");
                 writer.println("<body>");
-                writer.println("You should have been redirected ");
+                writer.println("Redirecting your browser to the latest conversation log. ");
+                writer.println("If you are not redirected click ");
                 writer.println("<a href=\"" + logFile.getName() + "\">here</a>.");
                 writer.println("</body></html>");
                 writer.flush();
