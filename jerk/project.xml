@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project>
+
+  <pomVersion>3</pomVersion>
+
+  <name>jerk</name>
+
+  <id>jerk</id>
+  <currentVersion>1.0-beta-1</currentVersion>
+  <organization>
+    <name>The Werken Company</name>
+    <url>http://www.werken.com</url>
+    <logo>http://images.werken.com/werken_large.gif</logo>
+  </organization>
+  <inceptionYear>2002</inceptionYear>
+  <package>com.werken.jerk</package>
+  <shortDescription>jerk: Java state-machine framework</shortDescription>
+  <logo>http://images.werken.com/jerk.gif</logo>
+
+  <description>
+  </description>
+
+  <url>http://jerk.werken.com/</url>
+
+  <mailingLists>
+    <mailingList>
+      <name>jerk interest</name>
+      <subscribe>http://lists.werken.com/mailman/listinfo/jerk-interest</subscribe>
+      <unsubscribe>http://lists.werken.com/mailman/listinfo/jerk-interest</unsubscribe>
+      <archive>http://lists.werken.com/pipermail/jerk-interest/</archive>
+    </mailingList>
+    <mailingList>
+      <name>jerk cvs messages</name>
+      <subscribe>http://lists.werken.com/mailman/listinfo/jerk-cvs</subscribe>
+      <unsubscribe>http://lists.werken.com/mailman/listinfo/jerk-cvs</unsubscribe>
+      <archive>http://lists.werken.com/pipermail/jerk-interest/</archive>
+      <archive>http://lists.werken.com/pipermail/jerk-cvs/</archive>
+    </mailingList>
+  </mailingLists>
+
+  <siteAddress>jerk.werken.com</siteAddress>
+  <siteDirectory>/www/jerk.werken.com</siteDirectory>
+  <issueTrackingUrl>http://jira.werken.com/</issueTrackingUrl>
+
+  <repository>
+    <connection>scm:cvs::pserver:anonymous@cvs.werken.com:/cvsroot/jerk:jerk</connection>
+    <url>http://cvs.werken.com/viewcvs.cgi/jerk/jerk/</url>
+  </repository>
+
+  <developers>
+    <developer>
+      <name>bob mcwhirter</name>
+      <id>werken</id>
+      <roles>
+        <role>Founder</role>
+      </roles>
+      <email>bob@eng.werken.com</email>
+      <organization>The Werken Company</organization>
+    </developer>
+  </developers>
+
+  <dependencies>
+
+    <dependency>
+      <id>forehead</id>
+      <version>1.0-beta-2</version>
+      <url>http://forehead.werken.co/</url>
+    </dependency>
+
+    <dependency>
+      <id>commons-beanutils</id>
+      <version>1.4-dev</version>
+    </dependency>
+
+    <dependency>
+      <id>junit</id>
+      <version>3.7</version>
+      <url>http://junit.org/</url>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <nagEmailAddress>bob@eng.werken.com</nagEmailAddress>
+    <sourceDirectory>src/java/main</sourceDirectory>
+    <unitTestSourceDirectory>src/java/test</unitTestSourceDirectory>
+    <aspectSourceDirectory/>
+    <unitTest>
+      <includes>
+        <include>**/*Test.java</include>
+      </includes>
+    </unitTest>
+
+    <resources>
+      <includes>
+        <include>com/werken/jerk/services/log/prolog</include>
+        <include>com/werken/jerk/services/log/epilog</include>
+      </includes>
+    </resources>
+
+    <jars/>
+  </build>
+</project>
