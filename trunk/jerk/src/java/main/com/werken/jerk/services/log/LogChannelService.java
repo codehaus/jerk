@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Date;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /** Binding of the log service to a channel.
  *
@@ -85,6 +86,8 @@ public class LogChannelService implements ChannelService
     /** Loggers. */
     private Map loggers;
 
+    private DateFormat dateFormat;
+
     // ------------------------------------------------------------
     //     Constructors
     // ------------------------------------------------------------
@@ -103,6 +106,7 @@ public class LogChannelService implements ChannelService
         this.props   = props;
         this.logDir  = logDir;
         this.loggers = new HashMap();
+        this.dateFormat = new SimpleDateFormat( "yyyy-MM-dd" );
     }
 
     // ------------------------------------------------------------
@@ -134,8 +138,7 @@ public class LogChannelService implements ChannelService
      */
     public void startLogs()
     {
-        String baseName = DateFormat.getDateInstance( DateFormat.SHORT ).format( new Date() ).replace( '/',
-                                                                                                       '-' );
+        String baseName = this.dateFormat.format( new Date() );
 
         Iterator nameIter = this.loggers.keySet().iterator();
         String   eachName = null;
