@@ -3,6 +3,10 @@
     <title>$CHANNEL$ - $DATE$</title>
     
     <link rel="stylesheet" href="../style.css" type="text/css" />
+    <link rel="alternate stylesheet" href="../textLarge.css" type="text/css" title="large">
+    <link rel="alternate stylesheet" href="../textSmall.css" type="text/css" title="small">
+
+    <script type="text/javascript" src="../styleswitcher.js"></script>
 
   </head>
 
@@ -17,6 +21,13 @@
            <a href="http://www.werken.com/"><img src="http://images.werken.com/werken_large.gif" border="0"></a>
 		 </td>
 		</tr>
+  		<tr>
+  		  <td class="banner" colspan="2">
+  		    Text Size:
+  		    <a href="#" onclick="javascript:setActiveStyleSheet('small'); return false;">small</a> |
+  		    <a href="#" onclick="javascript:setActiveStyleSheet('large'); return false;">large</a>
+  		  </td>
+  		</tr>
 
 <!-- 
   ||  begin entries
