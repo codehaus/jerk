@@ -1,5 +1,51 @@
 package com.werken.jerk;
 
+/*
+ $Id$
+
+ Copyright 2002 (C) The Werken Company. All Rights Reserved.
+ 
+ Redistribution and use of this software and associated documentation
+ ("Software"), with or without modification, are permitted provided
+ that the following conditions are met:
+
+ 1. Redistributions of source code must retain copyright
+    statements and notices.  Redistributions must also contain a
+    copy of this document.
+ 
+ 2. Redistributions in binary form must reproduce the
+    above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other
+    materials provided with the distribution.
+ 
+ 3. The name "jerk" must not be used to endorse or promote
+    products derived from this Software without prior written
+    permission of The Werken Company.  For written permission,
+    please contact bob@werken.com.
+ 
+ 4. Products derived from this Software may not be called "jerk"
+    nor may "jerk" appear in their names without prior written
+    permission of The Werken Company. "jerk" is a registered
+    trademark of The Werken Company.
+ 
+ 5. Due credit should be given to the jerk project
+    (http://jerk.werken.com/).
+ 
+ THIS SOFTWARE IS PROVIDED BY THE WERKEN COMPANY AND CONTRIBUTORS
+ ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+ NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ THE WERKEN COMPANY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ */
+
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.BufferedReader;
@@ -10,23 +56,54 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
 
+/** A jerk-connected IRC server.
+ *
+ *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
+ */
 public class Server implements Runnable
 {
+    // ------------------------------------------------------------
+    //     Instance members
+    // ------------------------------------------------------------
+
+    /** The jerk. */
     private Jerk jerk;
 
+    /** The server connection socket. */
     private Socket socket;
+
+    /** Input reading. */
     private BufferedReader in;
+
+    /** Output writing. */
     private BufferedWriter out;
 
+    /** Should run flag? */
     private boolean shouldRun;
 
+    /** Address of the server. */
     private String address;
+
+    /** Port of the server. */
     private int port;
 
+    /** The nickname to user. */
     private String nick;
 
+    /** Active channels. */
     private Map channels;
 
+    // ------------------------------------------------------------
+    //     Constructors
+    // ------------------------------------------------------------
+
+    /** Construct.
+     *
+     *  @param jerk The jerk.
+     *  @param address The server address.
+     *  @param port The server port.
+     *  @param nick The nickname.
+     */
     public Server(Jerk jerk,
                   String address,
                   int port,
@@ -41,21 +118,43 @@ public class Server implements Runnable
         this.shouldRun = true;
     }
 
+    // ------------------------------------------------------------
+    //     Instance methods
+    // ------------------------------------------------------------
+
+    /** Retrieve the address of the server.
+     *
+     *  @return The address.
+     */
     public String getAddress()
     {
         return this.address;
     }
 
+    /** Retrieve the port of the server.
+     *
+     *  @return The port.
+     */
     public int getPort()
     {
         return this.port;
     }
 
+    /** Retrieve the nickname of the jerk.
+     *
+     *  @return The nickname.
+     */
     public String getNick()
     {
         return this.nick;
     }
 
+    /** Parse the response code/command from a message.
+     *
+     *  @param msg The message to parse.
+     *
+     *  @return The response code/command.
+     */
     protected String getResponseCode(String msg)
     {
         int cur = 0;
@@ -73,6 +172,12 @@ public class Server implements Runnable
                               space );
     }
 
+    /** Parse the response message.
+     *
+     *  @param msg The message to parse.
+     *
+     *  @return The response message.
+     */
     protected String getResponseMessage(String msg)
     {
         int cur = 0;
@@ -96,6 +201,14 @@ public class Server implements Runnable
         return msg.substring( cur );
     }
 
+    /** Join a channel.
+     *
+     *  @param name The channel to join.
+     *
+     *  @throws IOException If an IO error occurs.
+     *  @throws JerkException If the channel is already parted or
+     *          otherwise cannot be joined.
+     */
     public void join(String name) throws IOException, JerkException
     {
         if ( this.channels.containsKey( name ) )
@@ -109,9 +222,17 @@ public class Server implements Runnable
         channel.join();
     }
 
+    /** Join a channel.
+     *
+     *  @param channel The channel to join.
+     *
+     *  @throws IOException If an IO error occurs.
+     *  @throws JerkException If the channel is already parted or
+     *          otherwise cannot be joined.
+     */
     protected void join(Channel channel) throws IOException, JerkException
     {
-        if ( channel.isJoined() )
+        if ( this.channels.containsKey( channel.getName() ) )
         {
             return;
         }
@@ -149,8 +270,6 @@ public class Server implements Runnable
 
             throw new JerkException( msg );
         }
-
-        channel.setJoined( true );
         
         this.channels.put( channel.getName(),
                            channel );
@@ -158,6 +277,14 @@ public class Server implements Runnable
         this.jerk.startServices( channel );
     }
 
+    /** Part a channel.
+     *
+     *  @param name The channel to join.
+     *
+     *  @throws IOException If an IO error occurs.
+     *  @throws JerkException If the channel is already parted or
+     *          otherwise cannot be parted.
+     */
     public void part(String name) throws IOException, JerkException
     {
         Channel channel = getChannel( name );
@@ -170,9 +297,17 @@ public class Server implements Runnable
         channel.part();
     }
 
+    /** Part a channel.
+     *
+     *  @param channel The channel to part.
+     *
+     *  @throws IOException If an IO error occurs.
+     *  @throws JerkException If the channel is already parted or
+     *          otherwise cannot be parted.
+     */
     protected void part(Channel channel) throws IOException, JerkException
     {
-        if ( ! channel.isJoined() )
+        if ( ! this.channels.containsKey( channel.getName() ) )
         {
             return;
         }
@@ -209,28 +344,56 @@ public class Server implements Runnable
             }
         }
 
-        channel.setJoined( false );
-
         channels.remove( channel.getName() ); 
     }
 
+    /** Retrieve a channel.
+     *
+     *  @param name The name of the channel.
+     *
+     *  @return The named channel or <code>null</code> if
+     *          this server is not actively connected to
+     *          the named channel.
+     */
     public Channel getChannel(String name)
     {
         return (Channel) this.channels.get( name );
     }
 
+    /** Retrieve all actively connected channels.
+     *
+     *  @return A collection of all actively connected channels.
+     */
     public Collection getChannels()
     {
         return this.channels.values();
     }
 
+    /** Start a service on a channel.
+     *
+     *  @param channel The channel.
+     *  @param name The service name.
+     *
+     *  @return The newly created channel service.
+     *
+     *  @throws JerkException If the service is undefined, already
+     *          started or cannot be started.
+     */
     public ChannelService startChannelService(Channel channel,
-                                            String name) throws JerkException
+                                              String name) throws JerkException
     {
         return this.jerk.startChannelService( channel,
                                               name );
     }
 
+    /** Stop a service on a channel.
+     *
+     *  @param channel The channel.
+     *  @param name The service name.
+     *
+     *  @throws JerkException If the service is undefined, not
+     *          started or cannot be stopped.
+     */
     public void stopChannelService(Channel channel,
                                    String name) throws JerkException
     {
@@ -238,6 +401,11 @@ public class Server implements Runnable
                                       name );
     }
 
+    /** Connect to this IRC server.
+     *
+     *  @throws IOException If an IO error occurs while 
+     *          attempting to connect.
+     */
     public void connect() throws IOException
     {
         Thread thread = new Thread( this );
@@ -255,7 +423,8 @@ public class Server implements Runnable
         Runtime.getRuntime().addShutdownHook(
             new Thread()
             {
-                public void run() {
+                public void run() 
+                {
                     try
                     {
                         disconnect();
@@ -270,11 +439,22 @@ public class Server implements Runnable
         thread.start();
     }
 
+    /** Disconnect from this IRC server.
+     *
+     *  @throws IOException If an IO error occurs while 
+     *          attempting to disconnect.
+     */
     public void disconnect() throws IOException
     {
         this.shouldRun = false;
     }
 
+    /** Service a message.
+     *
+     *  @param msgText The message text.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     protected void service(String msgText) throws IOException
     {
         if ( msgText.substring(0,4).equalsIgnoreCase( "ping" ) )
@@ -308,6 +488,12 @@ public class Server implements Runnable
         }
     }
 
+    /** Dispatch a message.
+     *
+     *  @param message The message.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     protected void dispatchMessage(Message message) throws IOException
     {
         if ( message.isPrivate() )
@@ -331,11 +517,23 @@ public class Server implements Runnable
         }
     }
 
+    /** Dispatch a private message.
+     *
+     *  @param message The message.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     protected void dispatchPrivateMessage(Message message) throws IOException
     {
-        dispatchMessage_internal( message );
+        dispatchMessageInternal( message );
     }
 
+    /** Dispatch a public message.
+     *
+     *  @param message The message.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     protected void dispatchPublicMessage(Message message) throws IOException
     {
         Tokenizer tokens = new Tokenizer( message.getPayload() );
@@ -344,10 +542,16 @@ public class Server implements Runnable
 
         message.setPayload( tokens.consumeRest() );
 
-        dispatchMessage_internal( message );
+        dispatchMessageInternal( message );
     }
 
-    protected void dispatchMessage_internal(Message message) throws IOException
+    /** Internally dispatch a public message.
+     *
+     *  @param message The message.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
+    protected void dispatchMessageInternal(Message message) throws IOException
     {
         Tokenizer tokens = new Tokenizer( message.getPayload() );
 
@@ -360,11 +564,19 @@ public class Server implements Runnable
         }
     }
 
+    /** Perform IRC protocol ping pong.
+     *
+     *  @param msg The ping message.
+     *
+     *  @throws IOException If an IO errors occurs.
+     */
     protected void pingPong(String msg) throws IOException
     {
         serverWrite( "pong " + msg.substring( 5 ) );
     }
 
+    /** Run the socket thread.
+     */
     public void run()
     {
         String msg = null;
@@ -420,6 +632,12 @@ public class Server implements Runnable
         }
     }
 
+    /** Write a bare low-level message to the server.
+     *
+     *  @param msg The message to write.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     public void serverWrite(String msg) throws IOException
     {
         this.out.write( msg );
@@ -427,6 +645,13 @@ public class Server implements Runnable
         this.out.flush();
     }
 
+    /** Read a bare low-level message to the server.
+     *
+     *  @return The message read, or <code>null</code>
+     *          if no unread message is available.
+     *
+     *  @throws IOException If an IO error occurs.
+     */
     public String serverRead() throws IOException
     {
         if ( this.in.ready() )
@@ -437,6 +662,10 @@ public class Server implements Runnable
         return null;
     }
 
+    /** Produce a textual representation suitable for debugging.
+     *
+     *  @return A debug string.
+     */
     public String toString()
     {
         return "[Server: address='" + getAddress() + "'"

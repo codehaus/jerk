@@ -1,5 +1,51 @@
 package com.werken.jerk;
 
+/*
+ $Id$
+
+ Copyright 2002 (C) The Werken Company. All Rights Reserved.
+ 
+ Redistribution and use of this software and associated documentation
+ ("Software"), with or without modification, are permitted provided
+ that the following conditions are met:
+
+ 1. Redistributions of source code must retain copyright
+    statements and notices.  Redistributions must also contain a
+    copy of this document.
+ 
+ 2. Redistributions in binary form must reproduce the
+    above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other
+    materials provided with the distribution.
+ 
+ 3. The name "jerk" must not be used to endorse or promote
+    products derived from this Software without prior written
+    permission of The Werken Company.  For written permission,
+    please contact bob@werken.com.
+ 
+ 4. Products derived from this Software may not be called "jerk"
+    nor may "jerk" appear in their names without prior written
+    permission of The Werken Company. "jerk" is a registered
+    trademark of The Werken Company.
+ 
+ 5. Due credit should be given to the jerk project
+    (http://jerk.werken.com/).
+ 
+ THIS SOFTWARE IS PROVIDED BY THE WERKEN COMPANY AND CONTRIBUTORS
+ ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+ NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ THE WERKEN COMPANY OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ */
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,13 +55,35 @@ import java.util.Properties;
 import java.util.Enumeration;
 import java.util.Iterator;
 
+/** The main <code>jerk</code> engine.
+ *
+ *  @see Server
+ *  @see Command
+ *  @see Service
+ * 
+ *  @author <a href="mailto:bob@eng.werken.com">bob mcwhirter</a>
+ */
 public class Jerk
 {
+    // ------------------------------------------------------------
+    //     Instance members
+    // ------------------------------------------------------------
+
+    /** Connected servers. */
     private Map servers;
 
+    /** Installed commands. */
     private Map commands;
+
+    /** Installed services. */
     private Map services;
 
+    // ------------------------------------------------------------
+    //     Constructors
+    // ------------------------------------------------------------
+
+    /** Construct.
+     */
     public Jerk()
     {
         this.servers = new HashMap();
@@ -24,6 +92,15 @@ public class Jerk
         this.services = new HashMap();
     }
 
+    // ------------------------------------------------------------
+    //     Instance methods
+    // ------------------------------------------------------------
+
+    /** Add a global command.
+     *
+     *  @param name The name of the command.
+     *  @param command The command.
+     */
     public void addCommand(String name,
                            Command command)
     {
@@ -31,11 +108,23 @@ public class Jerk
                            command );
     }
 
+    /** Retrieve a command by name.
+     *
+     *  @param name The name.
+     *
+     *  @return The command or <code>null</code> if no command
+     *          is registered with the specified name.
+     */
     public Command getCommand(String name)
     {
         return (Command) this.commands.get( name );
     }
 
+    /** Add a service.
+     *
+     *  @param name The name of the service.
+     *  @param service The service.
+     */
     public void addService(String name,
                            Service service)
     {
@@ -43,11 +132,27 @@ public class Jerk
                            service );
     }
 
+    /** Retrieve a service by name.
+     *
+     *  @param name The name.
+     *
+     *  @return The service of <code>null</code> if no service
+     *          is registered with the specified name.
+     */
     public Service getService(String name)
     {
         return (Service) this.services.get( name );
     }
 
+
+    /** Start services on a channel
+     *
+     *  @param channel The channel to start services on.
+     *
+     *  @throws IOException If an errors occurs while performing IO.
+     *  @throws JerkException If an error occrus while attempting to
+     *          start a service.
+     */
     public void startServices(Channel channel) throws IOException, JerkException
     {
         Iterator serviceNameIter = this.services.keySet().iterator();
@@ -63,6 +168,16 @@ public class Jerk
         }
     }
 
+    /** Start a single service on a channel
+     *
+     *  @param channel The channel to start the service on.
+     *  @param name The name of the service to start.
+     *
+     *  @return The newly created channel service.
+     *
+     *  @throws JerkException If an error occurs while attempting
+     *          to start the service.
+     */
     public ChannelService startChannelService(Channel channel,
                                               String name) throws JerkException
     {
@@ -76,6 +191,14 @@ public class Jerk
         return service.startChannelService( channel );
     }
 
+    /** Stop a single service on a channel
+     *
+     *  @param channel The channel to stop the service on.
+     *  @param name The name of the service to stop.
+     *
+     *  @throws JerkException If an error occurs while attempting
+     *          to stop the service.
+     */
     public void stopChannelService(Channel channel,
                                    String name) throws JerkException
     {
@@ -89,17 +212,34 @@ public class Jerk
         service.stopChannelService( channel );
     }
 
+    /** Connect to an IRC server, using the default port of 6667.
+     *
+     *  @param address The server address.
+     *  @param nick The nickname to use.
+     *
+     *  @throws IOException If an error occurs while attempting
+     *          to connect.
+     */
     public void connect(String address,
-                        String nick)
+                        String nick) throws IOException
     {
         connect( address,
                  6667,
                  nick );
     }
 
+    /** Connect to an IRC server.
+     *
+     *  @param address The server address.
+     *  @param port The server port.
+     *  @param nick The nickname to use.
+     *
+     *  @throws IOException If an error occurs while attempting
+     *          to connect.
+     */
     public void connect(String address,
                         int port,
-                        String nick)
+                        String nick) throws IOException
     {
         if ( this.servers.containsKey( address ) )
         {
@@ -111,21 +251,21 @@ public class Jerk
                                     port,
                                     nick );
 
-        try
-        {
-            server.connect();
-            
-            
-            this.servers.put( server.getAddress() + ":" + server.getPort(),
-                              server );
-        }
-        catch (IOException e)
-        {
-            System.err.println( "Unable to connect to " + address + ":" + port );
-            return;
-        }
+        server.connect();
+        
+        
+        this.servers.put( server.getAddress() + ":" + server.getPort(),
+                          server );
     }
 
+    /** Configure the jerk from a configuration directory.
+     *
+     *  @param configDir The configuration directory.
+     *  @param jerk The jerk to configure.
+     *
+     *  @throws IOException If an error occurs reading configuration
+     *          files. 
+     */
     protected static void configure(File configDir,
                                     Jerk jerk) throws IOException
     {
@@ -139,6 +279,14 @@ public class Jerk
                           jerk );
     }
 
+    /** Configure global commands from <code>commands.conf</code>.
+     *
+     *  @param configDir The configuration directory.
+     *  @param jerk The jerk to configure.
+     *
+     *  @throws IOException If an error occurs reading configuration
+     *          files. 
+     */
     protected static void configureCommands(File configDir,
                                             Jerk jerk) throws IOException
     {
@@ -188,6 +336,14 @@ public class Jerk
         }
     }
 
+    /** Retrieve the sub-set of properties with the given prefix,
+     *  with the prefix removed from the name.
+     *
+     *  @param prefix The prefix.
+     *  @param props The source properties.
+     *
+     *  @return The unprefixed properties matching the prefix.
+     */
     protected static Properties getPropertiesSubset(String prefix,
                                                     Properties props)
     {
@@ -210,6 +366,14 @@ public class Jerk
         return subsetProps;
     }
 
+    /** Configure global services from <code>services.conf</code>.
+     *
+     *  @param configDir The configuration directory.
+     *  @param jerk The jerk to configure.
+     *
+     *  @throws IOException If an error occurs reading configuration
+     *          files. 
+     */
     protected static void configureServices(File configDir,
                                             Jerk jerk) throws IOException
     {
@@ -271,6 +435,14 @@ public class Jerk
         }
     }
 
+    /** Configure the jerk's IRC server connection from <code>servers.conf</code>.
+     *
+     *  @param configDir The configuration directory.
+     *  @param jerk The jerk to configure.
+     *
+     *  @throws IOException If an error occurs reading configuration
+     *          files. 
+     */
     protected static void configureServers(File configDir,
                                            Jerk jerk) throws IOException
     {
@@ -299,6 +471,14 @@ public class Jerk
         }
     }
 
+    // ------------------------------------------------------------
+    //     Class methods
+    // ------------------------------------------------------------
+
+    /** Main command-line entrypoint to start the jerk.
+     *
+     *  @param args Command-line arguments.
+     */
     public static void main(String[] args)
     {
         if ( args.length != 1 )

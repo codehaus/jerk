@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<document>
+
+  <properties>
+    <author email="bob@eng.werken.com">bob mcwhirter</author>
+    <title>Usage</title>
+  </properties>
+
+  <body>
+    <section name="Usage">
+
+      <p>
+      To run the jerk, simply type:
+      </p>
+<source>
+java -cp jerk-1.0.jar com.werken.jerk.Jerk /path/to/config/directory/
+</source>
+
+      <p>
+      Once the jerk has connected, assuming he's using the nickname
+      <code>jerk</code>, you can communicate with him either through
+      private <code>/msg jerk</code> commands or public in-channel
+      commands.
+      </p>
+    </section>
+
+    <section name="Join">
+      <p>
+      The following command can be issued to the jerk privately
+      to instruct him to join a particular channel.
+      </p>
+
+<source>
+/msg jerk join mychannel
+</source>
+
+    </section>
+
+    <section name="Part">
+      <p>
+      The following command can be issued to the jerk privately
+      to instruct him to part a particular channel.
+      </p>
+
+<source>
+/msg jerk part &lt;channel-name&gt;
+</source>
+
+    </section>
+
+    <section name="Start">
+      <p>
+      The following command can be issued to the jerk within 
+      a channel to instruct him to start a service.
+      </p>
+
+<source>
+jerk start &lt;service-name&gt;
+</source>
+
+    </section>
+
+    <section name="Stop">
+      <p>
+      The following command can be issued to the jerk within 
+      a channel to instruct him to stop a service.
+      </p>
+
+<source>
+jerk stop &lt;service-name&gt;
+</source>
+
+    </section>
+
+  </body>
+
+</document>
+
